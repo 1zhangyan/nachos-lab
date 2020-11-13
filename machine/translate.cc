@@ -142,7 +142,7 @@ Machine::WriteMem(int addr, int size, int value)
 {
     ExceptionType exception;
     int physicalAddress;
-    printf("WRITE V ADDR : %d Value : %d \n" , addr , value);
+    //printf("WRITE V ADDR : %d Value : %d \n" , addr , value);
     DEBUG('a', "Writing VA 0x%x, size %d, value 0x%x\n", addr, size, value);
 
     exception = Translate(addr, &physicalAddress, size, TRUE);
@@ -284,7 +284,7 @@ else
     if (writing)
 	{
 		entry->dirty = TRUE;
-		printf("Dirty TRUE\n");
+		//printf("Dirty TRUE\n");
 	}
     *physAddr = pageFrame * PageSize + offset;
     ASSERT((*physAddr >= 0) && ((*physAddr + size) <= MemorySize));

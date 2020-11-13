@@ -22,9 +22,11 @@
 
 BitMap::BitMap(int nitems) 
 { 
+   // MapPointer = 0;
     numBits = nitems;
     numWords = divRoundUp(numBits, BitsInWord);
     map = new unsigned int[numWords];
+    //MapPointer = 0;
     for (int i = 0; i < numBits; i++) 
         Clear(i);
 }
@@ -106,10 +108,10 @@ BitMap::Find()
 	}
     return -1;*/
     
-    int i = 0;
+    int i = machine->MapPointer;
     if (machine->pageTable[i].dirty == TRUE)
     {
-        printf("Deal with dirty page i %d\n",i);
+        printf("Rewrite Dirty Page:%d\n",i);
         OpenFile *executable = fileSystem->Open("VirtualMemory");
         //executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
 
@@ -121,7 +123,7 @@ BitMap::Find()
     }
     
     machine->SetpageTable(i,0,0,FALSE,FALSE,FALSE,FALSE,0);
-    
+    machine->MapPointer = (i+1)%32;
     return i;
 }
 

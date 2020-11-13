@@ -14,7 +14,7 @@
 //#include "syscall.h"
 //#include "../userprog/machine.h"
 
-#define ARRLEN 5
+#define ARRLEN 900
 
 int A[ARRLEN];	/* size of physical memory; with code, we'll run out of space!*/
 

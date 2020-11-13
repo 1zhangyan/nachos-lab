@@ -204,7 +204,7 @@ class Machine {
 
 //=================记录内存空间分配的全局数据结构========================
     BitMap *MemoryMap;//记录分配信息的比特表
-	
+	int MapPointer;
 	void SetpageTable(int i,int virtualPage , int physicalPage, bool use ,bool readOnly,bool dirty,bool valid ,int thread)
 	{
         pageTable[i].virtualPage =virtualPage;

@@ -56,7 +56,7 @@ void CheckEndian()
 Machine::Machine(bool debug)
 {
 
-
+MapPointer = 0;
     MemoryMap = new BitMap(NumPhysPages);//初始化全局内存分配表
     queuePointer = 0; // FIFO算法队列指针初始化
 	findtimes = 0;   //统计信息tlb命中次数

@@ -111,11 +111,12 @@ ExceptionHandler(ExceptionType which)
             OpenFile *executable = fileSystem->Open("VirtualMemory");
 
             int code_pos = vpn*PageSize;
-            int paddr = machine->pageTable[0].physicalPage*PageSize;
+            int paddr = machine->pageTable[NewPhysicPage].physicalPage*PageSize;
 
             executable->ReadAt(&(machine->mainMemory[paddr]),PageSize, code_pos);
             delete executable;   
             DEBUG('a' , "PAGEFAULT Read into memoery %d from file %d size %d\n",paddr ,code_pos , PageSize );
+            printf("PageFault Handler Vpn= %d\tAllocate Ppn= %d\t\n",vpn , NewPhysicPage);
         }
             
     }
