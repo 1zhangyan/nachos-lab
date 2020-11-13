@@ -24,7 +24,13 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "machine.h"
+#include "filesys.h"
 
+#define SWAPALG 2
+
+
+//#define TLBSize 4
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -56,7 +62,64 @@ ExceptionHandler(ExceptionType which)
     if ((which == SyscallException) && (type == SC_Halt)) {
 	DEBUG('a', "Shutdown, initiated by user program.\n");
    	interrupt->Halt();
-    } else {
+    } 
+    else if((which == SyscallException) && (type == SC_Exit))
+    {
+        printf("Thread %s EXIT\n",currentThread->getName());
+        currentThread->Finish();
+    }
+    else if(which == PageFaultException)
+    {
+        if(machine->tlb!=NULL )
+        {
+            int virtAddr = machine->registers[BadVAddrReg];
+            int vpn = (unsigned) virtAddr / PageSize;
+            int flag = SWAPALG;
+            if (flag ==1)
+            {
+                machine->tlb[machine->queuePointer].virtualPage =  machine->pageTable[vpn].virtualPage;
+                machine->tlb[machine->queuePointer].physicalPage = machine->pageTable[vpn].physicalPage;
+                machine->tlb[machine->queuePointer].valid = TRUE;
+                machine->queuePointer = (machine->queuePointer+1)%TLBSize;
+            }
+            else if (flag ==2)
+            {
+                int tmp = machine->Swaptlb();
+                machine->tlb[tmp].virtualPage =  machine->pageTable[vpn].virtualPage;
+                machine->tlb[tmp].physicalPage = machine->pageTable[vpn].physicalPage;
+                machine->tlb[tmp].valid = TRUE;
+            }
+        }
+        else
+        {//处理缺页异常    
+           
+            int virtAddr = machine->registers[BadVAddrReg] ;
+            int vpn = (unsigned) virtAddr / PageSize;
+
+            int NewPhysicPage = machine->MemoryMap->Find();
+            if(NewPhysicPage == -1)
+            {
+                printf("NO PhysicPage can be allocatr\n");
+                ASSERT(FALSE);
+            }
+
+            machine->pageTable[NewPhysicPage].virtualPage = vpn;
+            machine->pageTable[NewPhysicPage].physicalPage = NewPhysicPage;
+            machine->pageTable[NewPhysicPage].valid = TRUE;
+            machine->pageTable[NewPhysicPage].thread = currentThread->getPid();
+
+            OpenFile *executable = fileSystem->Open("VirtualMemory");
+
+            int code_pos = vpn*PageSize;
+            int paddr = machine->pageTable[0].physicalPage*PageSize;
+
+            executable->ReadAt(&(machine->mainMemory[paddr]),PageSize, code_pos);
+            delete executable;   
+            DEBUG('a' , "PAGEFAULT Read into memoery %d from file %d size %d\n",paddr ,code_pos , PageSize );
+        }
+            
+    }
+    else {
 	printf("Unexpected user mode exception %d %d\n", which, type);
 	ASSERT(FALSE);
     }

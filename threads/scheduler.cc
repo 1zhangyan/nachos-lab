@@ -97,7 +97,7 @@ void
 Scheduler::Run (Thread *nextThread)
 {
     Thread *oldThread = currentThread;
-    
+
 #ifdef USER_PROGRAM			// ignore until running user programs 
     if (currentThread->space != NULL) {	// if this thread is a user program,
         currentThread->SaveUserState(); // save the user's CPU registers
@@ -118,10 +118,7 @@ Scheduler::Run (Thread *nextThread)
     // in switch.s.  You may have to think
     // a bit to figure out what happens after this, both from the point
     // of view of the thread and from the perspective of the "outside world".
-
-    SWITCH(oldThread, nextThread);
-    //scheduler->setLastSwitchTick(stats->systemTicks);
-    
+    SWITCH(oldThread, nextThread);  
     DEBUG('t', "Now in thread \"%s\"\n", currentThread->getName());
 
     // If the old thread gave up the processor because it was finishing,
@@ -129,6 +126,7 @@ Scheduler::Run (Thread *nextThread)
     // before now (for example, in Thread::Finish()), because up to this
     // point, we were still running on the old thread's stack!
     if (threadToBeDestroyed != NULL) {
+        //printf("DELETINH threadToBeDestroyed\n");
         delete threadToBeDestroyed;
 	threadToBeDestroyed = NULL;
     }

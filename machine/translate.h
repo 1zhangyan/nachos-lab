@@ -40,6 +40,11 @@ class TranslationEntry {
 			// page is referenced or modified.
     bool dirty;         // This bit is set by the hardware every time the
 			// page is modified.
+    int thread;
+    void print()
+    {
+      printf("vpn:%d\tppn:%d\tvalid:%d\treadonly:%d\tuse:%d\tdirty:%d\tthread:%d\n",virtualPage,physicalPage,valid,readOnly,use,dirty,thread);
+    }
 };
 
 #endif

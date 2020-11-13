@@ -24,6 +24,7 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
+//#include "syscall.h"
 
 extern "C" {
 #include <stdio.h>
@@ -431,8 +432,7 @@ Abort()
 // Exit
 // 	Quit without dropping core.
 //----------------------------------------------------------------------
-
-void 
+void
 Exit(int exitCode)
 {
     exit(exitCode);
@@ -501,3 +501,10 @@ DeallocBoundedArray(char *ptr, int size)
     mprotect(ptr + size, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
     delete [] (ptr - pgSize);
 }
+
+//===============================================
+/*void exit(int)
+{
+    printf("SSSSSSSSSS\n");
+    currentThread->Finish();
+}*/

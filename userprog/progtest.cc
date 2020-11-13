@@ -20,9 +20,25 @@
 //	memory, and jump to it.
 //----------------------------------------------------------------------
 
+//==========================Fork函数执行的函数体==================
+void simple(int which)
+{
+    currentThread->space->InitRegisters();
+    currentThread->space->RestoreState();	
+    printf("SecondThread Userpro Start!\n");
+    machine->Run();
+}
+
+
+//=========================================
+
+
+
 void
 StartProcess(char *filename)
 {
+    printf("Main Thread strat and First User thread Start!\n");
+    currentThread->filename = filename;
     OpenFile *executable = fileSystem->Open(filename);
     AddrSpace *space;
 
@@ -30,10 +46,31 @@ StartProcess(char *filename)
 	printf("Unable to open file %s\n", filename);
 	return;
     }
+
+
     space = new AddrSpace(executable);    
     currentThread->space = space;
 
     delete executable;			// close file
+
+/*
+//===================== Add second thread code===============
+OpenFile *executable2 = fileSystem->Open(filename);
+AddrSpace *space2;
+if (executable2 == NULL) {
+	printf("Unable to open file %s\n", filename);
+	return;
+    }
+    space2 = new AddrSpace(executable2);    
+    Thread * SecondThread = new Thread("SecondThread");
+    SecondThread->space = space2;
+    delete executable2;
+    SecondThread->Fork(simple,1);		
+
+
+//===========================================================
+*/
+
 
     space->InitRegisters();		// set the initial register values
     space->RestoreState();		// load page table register

@@ -35,10 +35,10 @@ Machine::Run()
     if(DebugIsEnabled('m'))
         printf("Starting thread \"%s\" at time %d\n",
 	       currentThread->getName(), stats->totalTicks);
-    interrupt->setStatus(UserMode);
+	interrupt->setStatus(UserMode);
     for (;;) {
         OneInstruction(instr);
-	interrupt->OneTick();
+		interrupt->OneTick();
 	if (singleStep && (runUntilTime <= stats->totalTicks))
 	  Debugger();
     }
@@ -95,10 +95,9 @@ Machine::OneInstruction(Instruction *instr)
 {
     int raw;
     int nextLoadReg = 0; 	
-    int nextLoadValue = 0; 	// record delayed load operation, to apply
-				// in the future
-
+    int nextLoadValue = 0; 	
     // Fetch instruction 
+	
     if (!machine->ReadMem(registers[PCReg], 4, &raw))
 	return;			// exception occurred
     instr->value = raw;
@@ -106,7 +105,6 @@ Machine::OneInstruction(Instruction *instr)
 
     if (DebugIsEnabled('m')) {
        struct OpString *str = &opStrings[instr->opCode];
-
        ASSERT(instr->opCode <= MaxOpcode);
        printf("At PC = 0x%x: ", registers[PCReg]);
        printf(str->string, TypeToReg(str->args[0], instr), 

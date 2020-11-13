@@ -9,11 +9,11 @@
  * All rights reserved.  See copyright.h for copyright notice and limitation 
  * of liability and disclaimer of warranty provisions.
  */
-
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
 
 #include "copyright.h"
+//#include "system.h"
 
 /* system call codes -- used by the stubs to tell the kernel which system call
  * is being asked for
@@ -45,11 +45,11 @@
 /* Stop Nachos, and print out performance stats */
 void Halt();		
  
-
 /* Address space control operations: Exit, Exec, and Join */
 
 /* This user program is done (status = 0 means exited normally). */
 void Exit(int status);	
+
 
 /* A unique identifier for an executing user program (address space) */
 typedef int SpaceId;	

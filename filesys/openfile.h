@@ -77,7 +77,7 @@ class OpenFile {
     int Write(char *from, int numBytes);
 
     int ReadAt(char *into, int numBytes, int position);
-    					// Read/write bytes from the file,
+    			    // Read/write bytes from the file,
 					// bypassing the implicit position.
     int WriteAt(char *from, int numBytes, int position);
 

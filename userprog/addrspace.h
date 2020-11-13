@@ -15,10 +15,11 @@
 
 #include "copyright.h"
 #include "filesys.h"
+#include "noff.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
 
-class AddrSpace {
+class AddrSpace {  
   public:
     AddrSpace(OpenFile *executable);	// Create an address space,
 					// initializing it with the program
@@ -31,11 +32,16 @@ class AddrSpace {
     void SaveState();			// Save/restore address space-specific
     void RestoreState();		// info on a context switch 
 
+
+  //NoffHeader noffH;
+  //OpenFile *Threadexecutable;
   private:
-    TranslationEntry *pageTable;	// Assume linear page table translation
+    //TranslationEntry *pageTable;	// Assume linear page table translation
 					// for now!
     unsigned int numPages;		// Number of pages in the virtual 
 					// address space
+    
 };
+
 
 #endif // ADDRSPACE_H

@@ -23,6 +23,7 @@
 #include "copyright.h"
 #include "interrupt.h"
 #include "system.h"
+#include "machine.h"
 
 // String definitions for debugging messages
 
@@ -242,6 +243,12 @@ Interrupt::Idle()
 void
 Interrupt::Halt()
 {
+    printf("Assuming the program memory has been recllected.\n");
+    #ifdef USE_TLB
+    double missrate = (machine->misstimes)*100.00/(machine->findtimes - machine->misstimes);
+    printf("ALL:%d   Miss:%d   MissRate:%.2lf% \n",machine->findtimes,machine->misstimes,missrate);
+    #endif  
+
     printf("Machine halting!\n\n");
     stats->Print();
     Cleanup();     // Never returns.
@@ -307,7 +314,7 @@ Interrupt::CheckIfDue(bool advanceClock)
 
     if (advanceClock && when > stats->totalTicks) {	// advance the clock
 	stats->idleTicks += (when - stats->totalTicks);
-	stats->totalTicks = when;
+	stats->totalTicks = when;   
     } else if (when > stats->totalTicks) {	// not time yet, put it back
 	pending->SortedInsert(toOccur, when);
 	return FALSE;
@@ -369,3 +376,5 @@ Interrupt::DumpState()
     printf("End of pending interrupts\n");
     fflush(stdout);
 }
+
+

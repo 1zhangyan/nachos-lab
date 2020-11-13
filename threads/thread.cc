@@ -65,12 +65,15 @@ Thread::Thread(char* threadName)
 Thread::~Thread()
 {
     DEBUG('t', "Deleting thread \"%s\"\n", name);
-    
         globalThreadManager->RemoveThreadFromList(this);
-    
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
+#ifdef USER_PROGRAM
+//printf("delete this.space\n");
+delete this->space;
+
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -103,12 +106,13 @@ Thread::Fork(VoidFunctionPtr func, int arg)
 
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
     
-    scheduler->ReadyToRun(this);	// ReadyToRun assumes that interrupts 
-    //scheduler->ReadyToRun(currentThread);
-    //Thread *nextThread = scheduler->FindNextToRun();
-    //if (nextThread != NULL) {
-	//scheduler->Run(nextThread);
-    //}
+    scheduler->ReadyToRun(this);	
+    // ReadyToRun assumes that interrupts 
+    scheduler->ReadyToRun(currentThread);
+    Thread *nextThread = scheduler->FindNextToRun();
+    if (nextThread != NULL) {
+	scheduler->Run(nextThread);
+    }
     (void) interrupt->SetLevel(oldLevel);
     //Yield();
 
@@ -165,7 +169,7 @@ Thread::Finish ()
     ASSERT(this == currentThread);
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
-    
+    //printf("Finishing thread %s \n" , getName());
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
@@ -199,7 +203,7 @@ Thread::Yield ()
     
     DEBUG('t', "Yielding thread \"%s\"\n", getName());
     
-    
+    /*
     if(this->used_time_slice < SWITCHTIMESLICE)
     {
         //this->used_time_slice-=STANDARDTIMESLICE;
@@ -214,13 +218,13 @@ Thread::Yield ()
         scheduler->ReadyToRun(this);
         scheduler->Run(nextThread);
      }
-    }
+    }*/     
     
-    /*nextThread = scheduler->FindNextToRun();
+    nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {
 	scheduler->ReadyToRun(this);
 	scheduler->Run(nextThread);
-    }*/
+    }
     (void) interrupt->SetLevel(oldLevel);
 }
 
@@ -252,11 +256,10 @@ Thread::Sleep ()
     ASSERT(interrupt->getLevel() == IntOff);
     
     DEBUG('t', "Sleeping thread \"%s\"\n", getName());
-
+    
     status = BLOCKED;
     while ((nextThread = scheduler->FindNextToRun()) == NULL)
 	interrupt->Idle();	// no one to run, wait for an interrupt
-        
     scheduler->Run(nextThread); // returns when we've been signalled
 }
 
