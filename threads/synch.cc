@@ -98,11 +98,12 @@ Semaphore::V()
     value++;
     (void) interrupt->SetLevel(oldLevel);
 }
-
+//=======================================lock=============================
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) {
+Lock::Lock(char* debugName) 
+{
     name  = debugName;
     lock = new Semaphore(debugName , 1);
     heldthread = NULL;
@@ -112,27 +113,76 @@ Lock::~Lock()
     delete lock;
 }
 
-//================================
+//------------------------------------------------------
 void Lock::Acquire() 
 {   
-    
+    //IntStatus oldLevel = interrupt->SetLevel(IntOff);
     lock->P();
     heldthread = currentThread;
+    //(void) interrupt->SetLevel(oldLevel);
 }
 
-//===============================
-void Lock::Release() {
-    
+//----------------------------------------------------
+void Lock::Release() 
+{
+    //IntStatus oldLevel = interrupt->SetLevel(IntOff);
     heldthread = NULL;
     lock->V();  
+    //(void) interrupt->SetLevel(oldLevel);
+}
+
+bool Lock::isHeldByCurrentThread()
+{
+    return (currentThread==heldthread);
 }
 
 
+//========================================Condition==========================
+Condition::Condition(char* debugName) 
+{
+    waitinglist = new List();
+}
+Condition::~Condition() 
+{ 
+    delete waitinglist;
+}
+//--------------------------------------
+void Condition::Wait(Lock* conditionLock) 
+{
+    //ASSERT(FALSE);
+    
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    conditionLock->Release();
+    waitinglist->Append(currentThread);
+    currentThread->Sleep();
+    conditionLock->Acquire();
+    (void) interrupt->SetLevel(oldLevel);
+    
+}
 
+//--------------------------------------
+void Condition::Signal(Lock* conditionLock)
+{ 
+   
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    if(!waitinglist->IsEmpty())
+    {
+        Thread *next = (Thread*)waitinglist->Remove();
+        scheduler->ReadyToRun(next);
+    }
+    (void) interrupt->SetLevel(oldLevel);
+    
+}
 
-
-Condition::Condition(char* debugName) { }
-Condition::~Condition() { }
-void Condition::Wait(Lock* conditionLock) { ASSERT(FALSE); }
-void Condition::Signal(Lock* conditionLock) { }
-void Condition::Broadcast(Lock* conditionLock) { }
+//--------------------------------------
+void Condition::Broadcast(Lock* conditionLock)
+{
+    
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    while(!waitinglist->IsEmpty())
+    {
+        Signal(conditionLock);
+    }
+    (void) interrupt->SetLevel(oldLevel);
+    
+}

@@ -99,8 +99,6 @@ void
 ThreadTest1()
 {
     DEBUG('t', "Entering ThreadTest1");
-
-
     Thread *t1 = new Thread("Producer1");
     //t1->setPriority(9);
     Thread *t2 = new Thread("Consumer1");

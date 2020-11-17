@@ -140,7 +140,7 @@ class Condition {
 
   private:
     char* name;
-    Semaphore *lock;//定义一把锁
+    List* waitinglist;//定义一个等待队列
     
     // plus some other stuff you'll need to define
 };
