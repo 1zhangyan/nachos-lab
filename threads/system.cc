@@ -19,6 +19,11 @@ Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
 GlobalThreadManager *globalThreadManager;
+int syntestnum1;
+int syntestnum2;
+int syntestnum3;
+int syntestnum4;
+
 //Thread 
 #ifdef FILESYS_NEEDED
 FileSystem  *fileSystem;
@@ -139,7 +144,12 @@ Initialize(int argc, char **argv)
 	timer = new Timer(TimerInterruptHandler, 0, randomYield);
     globalThreadManager = new GlobalThreadManager();
     threadToBeDestroyed = NULL;
-
+    
+    
+    syntestnum1 = 0;
+    syntestnum2 = 0;
+    syntestnum3 = 0;
+    syntestnum4 = 0;
     // We didn't explicitly allocate the current thread we are running in.
     // But if it ever tries to give up the CPU, we better have a Thread
     // object to save its state. 

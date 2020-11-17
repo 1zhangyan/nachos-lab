@@ -31,6 +31,12 @@ extern Timer *timer;				// the hardware alarm clock
 extern GlobalThreadManager* globalThreadManager;
 
 
+extern int syntestnum1 ; //
+extern int syntestnum2 ;
+extern int syntestnum3 ;
+extern int syntestnum4 ;
+
+
 #ifdef USER_PROGRAM
 #include "machine.h"
 extern Machine* machine;	// user program memory and registers

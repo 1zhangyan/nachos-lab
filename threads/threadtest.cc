@@ -11,9 +11,20 @@
 
 #include "copyright.h"
 #include "system.h"
-
+#include "synch.h"
+ 
 // testnum is set in main.cc
 int testnum = 1 ;
+
+
+//int empty = 10;
+int itemnum = 0;
+
+Semaphore *mutex = new Semaphore("Prod-Cons-mutex",1);
+Semaphore *empty = new Semaphore("Prod-Cons-syn-empty",10);
+Semaphore *full = new Semaphore("Prod-Cons-syn-full",0);
+
+Lock *syntestlock = new Lock("Prod-Cons");
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -28,15 +39,54 @@ void
 SimpleThread(int which)
 {
     int num;
-    printf("Come into Thread t%d\n",which);
-    for (num = 0; num < 5; num++) {
-	printf("*** thread %d looped %d times\tCUR_Thread:%s\t Thread_used_time_slice:%d\tCURSystem:%d\t \n", which, num,currentThread->getName(),currentThread->used_time_slice,stats->systemTicks);
-        //currentThread->setPriority(currentThread->getPriority()-1);
-
-        currentThread->Yield();
-        
+    for (num = 0; num < 5; num++) 
+    {
+            //printf("*** thread %d looped %d times\tCUR_Thread:%s\t Thread_used_time_slice:%d\tCURSystem:%d\t \n", which, num,currentThread->getName(),currentThread->used_time_slice,stats->systemTicks);
+            //currentThread->setPriority(currentThread->getPriority()-1);
+            printf("Thread t%d\t syntestnum1:%d\t syntestnum2:%d\n",which,syntestnum1,syntestnum2);
+            currentThread->Yield();  
     }
     //globalThreadManager->ShowListInfo();
+}
+
+//---------------------------------------------------------------------
+//生产者消费者
+//---------------------------------------------------------------------
+void Producer(int which)
+{
+    int loop = 1;
+    while(loop <=5)
+    {
+    //printf("*** thread %d looped %d times\tCUR_Thread:%s\t Thread_used_time_slice:%d\tCURSystem:%d\t \n", which, loop,currentThread->getName(),currentThread->used_time_slice,stats->systemTicks);
+    empty->P();
+    currentThread->Yield();
+    mutex->P();
+    currentThread->Yield();
+    printf("Producer%d produece an item\t itemnum:%d empty:%d full:%d\n",which,itemnum,empty->getValue(),full->getValue());
+    itemnum++;
+    currentThread->Yield();
+    mutex->V();
+    currentThread->Yield();
+    full->V();
+    loop++;
+    printf("loops:%d\n", loop);
+    }
+}
+void Consumer(int which)
+{
+    int loop = 1;
+    while(loop<=10){
+    full->P();
+    currentThread->Yield();
+    mutex->P();
+    currentThread->Yield();
+    itemnum--;
+    printf("Consume%d consume an item\t itemnum:%d empty:%d full:%d\n",which,itemnum,empty->getValue(),full->getValue());
+    mutex->V();
+    currentThread->Yield();
+    empty->V();
+    loop++;
+    }
 }
 
 //----------------------------------------------------------------------
@@ -51,22 +101,22 @@ ThreadTest1()
     DEBUG('t', "Entering ThreadTest1");
 
 
-
-    Thread *t1 = new Thread("t1");
+    Thread *t1 = new Thread("Producer1");
     //t1->setPriority(9);
-    Thread *t2 = new Thread("t2");
+    Thread *t2 = new Thread("Consumer1");
     //t2->setPriority(8);
-    Thread *t3 = new Thread("t3");
+    Thread *t3 = new Thread("Consumer2");
     //t3->setPriority(4);
+    Thread *t4 = new Thread("Producer2");
 
-
-    t1->Fork(SimpleThread, 1);
-    t2->Fork(SimpleThread, 2);
-    t3->Fork(SimpleThread, 3);
+    t1->Fork(Producer, 1);
+    t2->Fork(Consumer, 1);
+    t3->Fork(Consumer, 2);
+    t4->Fork(Producer, 2);
 
     globalThreadManager->ShowListInfo();
     
-    SimpleThread(0);
+    //SimpleThread(0);
     //printf("CUR NAME: %s\n ",currentThread->getName());
 
     

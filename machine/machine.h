@@ -25,8 +25,11 @@
 #include "utility.h"
 #include "translate.h"
 #include "disk.h"
+
+#ifdef USER_PROGRAM
 #include "bitmap.h"
 
+#endif
 // Definitions related to the size, and format of user memory
 
 #define PageSize 	SectorSize 	// set the page size equal to
@@ -193,6 +196,7 @@ class Machine {
 	//可以根据页表项找到对应的逻辑地址和物理地址直接的对应关系。
     unsigned int pageTableSize;
 
+#ifdef USER_PROGRAM
 //=================记录tlb相关信息的数据结构============================
 	int queuePointer; // FIFO算法队列指针.
     int tlbflag[TLBSize];//LRU算法队列指针
@@ -217,7 +221,7 @@ class Machine {
 	}
 //============================                   =====================
 
-
+#endif
 
 
 

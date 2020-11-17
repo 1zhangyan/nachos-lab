@@ -44,7 +44,12 @@ class Semaphore {
     
     void P();	 // these are the only operations on a semaphore
     void V();	 // they are both *atomic*
-    
+    int getValue()
+    {
+      int a = value;
+      return a;
+    }
+
   private:
     char* name;        // useful for debugging
     int value;         // semaphore value, always >= 0
@@ -79,6 +84,10 @@ class Lock {
 
   private:
     char* name;				// for debugging
+
+    Semaphore *lock;//使用信号量来同步和互斥锁
+    Thread * heldthread; // 指向当前拥有锁的指针。
+
     // plus some other stuff you'll need to define
 };
 
@@ -131,6 +140,8 @@ class Condition {
 
   private:
     char* name;
+    Semaphore *lock;//定义一把锁
+    
     // plus some other stuff you'll need to define
 };
 #endif // SYNCH_H

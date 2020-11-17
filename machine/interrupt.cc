@@ -124,7 +124,7 @@ Interrupt::SetLevel(IntStatus now)
 
     ChangeLevel(old, now);			// change to new state
     if ((now == IntOn) && (old == IntOff))
-	OneTick();				// advance simulated time
+	{currentThread->used_time_slice +=10;OneTick();}// advance simulated time
     return old;
 }
 
@@ -153,9 +153,10 @@ void
 Interrupt::OneTick()
 {
     MachineStatus old = status;
-    currentThread->used_time_slice +=10;
+    
+
     //printf("One TICK\n");
-// advance simulated time
+    // advance simulated time
     if (status == SystemMode) {
         stats->totalTicks += SystemTick;
 	stats->systemTicks += SystemTick;
@@ -176,7 +177,8 @@ Interrupt::OneTick()
 					// for a context switch, ok to do it now
 	yieldOnReturn = FALSE;
  	status = SystemMode;		// yield is a kernel routine
-	currentThread->Yield();
+	
+    currentThread->Yield();
 	status = old;
     }
 }

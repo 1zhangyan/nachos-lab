@@ -72,7 +72,6 @@ Thread::~Thread()
 #ifdef USER_PROGRAM
 //printf("delete this.space\n");
 delete this->space;
-
 #endif
 }
 
@@ -115,9 +114,6 @@ Thread::Fork(VoidFunctionPtr func, int arg)
     }
     (void) interrupt->SetLevel(oldLevel);
     //Yield();
-
-    
-    
 }    
 
 //----------------------------------------------------------------------
