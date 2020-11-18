@@ -107,10 +107,11 @@ ThreadTest1()
     //t3->setPriority(4);
     Thread *t4 = new Thread("Producer2");
 
-    t1->Fork(Producer, 1);
     t2->Fork(Consumer, 1);
-    t3->Fork(Consumer, 2);
+    t1->Fork(Producer, 1);
     t4->Fork(Producer, 2);
+    t3->Fork(Consumer, 2);
+    
 
     globalThreadManager->ShowListInfo();
     
