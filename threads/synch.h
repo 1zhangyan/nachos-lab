@@ -84,7 +84,7 @@ class Lock {
 
   private:
     char* name;				// for debugging
-
+    
     Semaphore *lock;//使用信号量来同步和互斥锁
     Thread * heldthread; // 指向当前拥有锁的指针。
 

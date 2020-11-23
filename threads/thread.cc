@@ -65,7 +65,9 @@ Thread::Thread(char* threadName)
 Thread::~Thread()
 {
     DEBUG('t', "Deleting thread \"%s\"\n", name);
-        globalThreadManager->RemoveThreadFromList(this);
+    globalThreadManager->RemoveThreadFromList(this);
+    //globalThreadManager->ShowListInfo();
+    //printf("Current thread : %s \n" , currentThread->getName());
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
@@ -104,16 +106,17 @@ Thread::Fork(VoidFunctionPtr func, int arg)
     StackAllocate(func, arg);
 
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    
     scheduler->ReadyToRun(this);	
     // ReadyToRun assumes that interrupts 
-    scheduler->ReadyToRun(currentThread);
-    Thread *nextThread = scheduler->FindNextToRun();
-    if (nextThread != NULL) {
+    //scheduler->ReadyToRun(currentThread);
+    
+    /*Thread *nextThread = scheduler->FindNextToRun();
+    if (nextThread != NULL)
+    {
 	scheduler->Run(nextThread);
     }
+    */
     (void) interrupt->SetLevel(oldLevel);
-    //Yield();
 }    
 
 //----------------------------------------------------------------------
@@ -214,10 +217,12 @@ Thread::Yield ()
         scheduler->ReadyToRun(this);
         scheduler->Run(nextThread);
      }
-    }*/     
+    }
+    */     
     
     nextThread = scheduler->FindNextToRun();
-    if (nextThread != NULL) {
+    if (nextThread != NULL) 
+    {
 	scheduler->ReadyToRun(this);
 	scheduler->Run(nextThread);
     }
@@ -255,7 +260,11 @@ Thread::Sleep ()
     
     status = BLOCKED;
     while ((nextThread = scheduler->FindNextToRun()) == NULL)
-	interrupt->Idle();	// no one to run, wait for an interrupt
+    {
+	interrupt->Idle();
+    }	// no one to run, wait for an interrupt
+
+    //printf("current%s next%s  =======================\n",currentThread->getName(),nextThread->getName());
     scheduler->Run(nextThread); // returns when we've been signalled
 }
 

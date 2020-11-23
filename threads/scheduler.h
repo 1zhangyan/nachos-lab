@@ -31,7 +31,7 @@ class Scheduler {
     
     //void setLastSwitchTick(int tick){lastSwitchTick = tick;}
     //int getLastSwitchTick(){return lastSwitchTick;}
-  private:
+  public:
     List *readyList;  		// queue of threads that are ready to run,
 		//int lastSwitchTick;
     		// but not running

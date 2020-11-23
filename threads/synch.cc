@@ -68,7 +68,7 @@ Semaphore::P()
     
     while (value == 0) { 			// semaphore not available
 	queue->Append((void *)currentThread);	// so go to sleep
-    printf("CurrentThread %s Go to sleep\n" , currentThread->getName());
+    printf("%s Go to sleep\n" , currentThread->getName());
 	currentThread->Sleep();
     } 
     value--; 					// semaphore available, 
@@ -98,7 +98,9 @@ Semaphore::V()
     value++;
     (void) interrupt->SetLevel(oldLevel);
 }
-//=======================================lock=============================
+
+
+//=======================================LOCK===================================
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
@@ -137,7 +139,9 @@ bool Lock::isHeldByCurrentThread()
 }
 
 
-//========================================Condition==========================
+
+
+//========================================Condition Variable==========================
 Condition::Condition(char* debugName) 
 {
     waitinglist = new List();
@@ -163,7 +167,6 @@ void Condition::Wait(Lock* conditionLock)
 //--------------------------------------
 void Condition::Signal(Lock* conditionLock)
 { 
-   
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
     if(!waitinglist->IsEmpty())
     {

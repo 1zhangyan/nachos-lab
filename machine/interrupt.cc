@@ -245,6 +245,8 @@ Interrupt::Idle()
 void
 Interrupt::Halt()
 {
+   // globalThreadManager->ShowListInfo();
+
     printf("Assuming the program memory has been recllected.\n");
     #ifdef USE_TLB
     double missrate = (machine->misstimes)*100.00/(machine->findtimes - machine->misstimes);
@@ -308,16 +310,20 @@ Interrupt::CheckIfDue(bool advanceClock)
 					// to invoke an interrupt handler
     if (DebugIsEnabled('i'))
 	DumpState();
-    PendingInterrupt *toOccur = 
-		(PendingInterrupt *)pending->SortedRemove(&when);
+    PendingInterrupt *toOccur = (PendingInterrupt *)pending->SortedRemove(&when);
 
     if (toOccur == NULL)		// no pending interrupts
 	return FALSE;			
 
-    if (advanceClock && when > stats->totalTicks) {	// advance the clock
+    if (advanceClock && when > stats->totalTicks) 
+    {	
+    // advance the clock
 	stats->idleTicks += (when - stats->totalTicks);
 	stats->totalTicks = when;   
-    } else if (when > stats->totalTicks) {	// not time yet, put it back
+    } 
+    else if (when > stats->totalTicks) 
+    {	
+    // not time yet, put it back
 	pending->SortedInsert(toOccur, when);
 	return FALSE;
     }
