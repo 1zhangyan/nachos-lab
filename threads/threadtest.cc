@@ -14,7 +14,7 @@
 #include "synch.h"
  
 // testnum is set in main.cc
-int testnum = 3 ;
+int testnum = 4 ;
 
 
 //公共锁和信号量
@@ -31,10 +31,12 @@ Condition *con = new Condition("Prod-Cons-cond");
 
 //哲学家就餐问题锁和信号量
 Semaphore chopsticks[4] = {Semaphore("chop0",1),Semaphore("chop1",1),Semaphore("chop2",1),Semaphore("chop3",1) };
-//chopsticks[0] = new Semaphore("chop0",1);
-//chopsticks[1] = new Semaphore("chop1",1);
-//chopsticks[2] = new Semaphore("chop2",1);
-//chopsticks[3] = new Semaphore("chop3",1);
+
+//屏障机制 条件变量
+Lock *barrier_lock = new Lock("barrier_lock");
+Condition *barrier_cond = new Condition("barrier_cond");
+int countnum = 0;
+int threadnum = 0;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -51,8 +53,6 @@ SimpleThread(int which)
     int num;
     for (num = 0; num < 5; num++) 
     {
-            //printf("*** thread %d looped %d times\tCUR_Thread:%s\t Thread_used_time_slice:%d\tCURSystem:%d\t \n", which, num,currentThread->getName(),currentThread->used_time_slice,stats->systemTicks);
-            //currentThread->setPriority(currentThread->getPriority()-1);
             printf("Thread t%d\t syntestnum1:%d\t syntestnum2:%d\n",which,syntestnum1,syntestnum2);
             currentThread->Yield();  
     }
@@ -60,7 +60,9 @@ SimpleThread(int which)
 }
 
 //---------------------------------------------------------------------
+//---------------------------
 //生产者消费者   信号量版
+//---------------------------
 //---------------------------------------------------------------------
 void Producer_semaphore(int which)
 {
@@ -100,8 +102,6 @@ void Consumer_semaphore(int which)
 //-------------------------------------------
 //----------------生产者消费者 条件变量版------
 //-------------------------------------------
-
-
 void Producer_cond(int which)
 {
     int loop = 1;
@@ -159,17 +159,11 @@ ThreadTest3()
         currentThread->Yield();
     }
     globalThreadManager->ShowListInfo();
-    
 }
-
-
-
-
 
 //-------------------------------------------
 //-------------------哲学家就餐---------------
 //-------------------------------------------
-
 void Philosopher_deadlock(int which)
 {
     int i = 0;
@@ -240,9 +234,6 @@ void Philosopher(int which)
     }
 }
 
-
-
-
 void ThreadTest2()
 {
 
@@ -257,24 +248,93 @@ void ThreadTest2()
     t3->Fork(Philosopher, 2);
     t4->Fork(Philosopher, 3);
 
-
     for(int  i = 0 ; i< 10000 ; i++)
     {
         currentThread->Yield();
     }
 }
+//------------------------------
+//Barrier屏障机制
+//Threadtest3
+//int countnum = 0;
+//int threadnum = 0;
+//--------------------------------
+int barrier_flag[4];
 
+void init_flag()
+{
+    for(int i = 0 ; i < 4 ; i ++)
+    barrier_flag[i] = 0;
+}
 
+bool all_thread_ready()
+{
+    for (int i = 0 ; i < 4 ; i++)
+    {
+        if (barrier_flag[i]!=1)
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
+void barrier_function(int which)//Realize a barrier demo
+{
+    int thiscountnum = which;
+    int i = 0 ; 
+    while(i < 2)
+    { 
+        while(thiscountnum < 5)
+        {
+            currentThread->Yield();
+            thiscountnum++;
+        }
+        i++;
+        barrier_lock->Acquire();
+        barrier_flag[which] = 1;
+        //printf(" currentthread %s flag %d\n",currentThread->getName() , all_thread_ready());
+        if (!all_thread_ready())
+        {
+            barrier_cond->Wait(barrier_lock);
+        }
+        countnum += thiscountnum;
+        printf("Add barrier function%d countnum = %d \n" ,which, countnum);
+        barrier_flag[which] = 0;
+        currentThread->Yield();
+        barrier_lock->Release();
+        currentThread->Yield();
+        barrier_cond->Broadcast(barrier_lock);
+        thiscountnum = which;
+    }
+}
 
+void ThreadTest4()
+{
+    
+    init_flag();
+    DEBUG('t', "Entering ThreadTest3");
+    Thread *t1 = new Thread("barrier_function0");
+    Thread *t2 = new Thread("barrier_function1");
+    Thread *t3 = new Thread("barrier_function2");
+    Thread *t4 = new Thread("barrier_function3");
 
+    t1->Fork(barrier_function, 0);
+    t2->Fork(barrier_function, 1);
+    t3->Fork(barrier_function, 2);
+    t4->Fork(barrier_function, 3);
 
+    for(int  i = 0 ; i< 10000 ; i++)
+    {
+        currentThread->Yield();
+    }
+    globalThreadManager->ShowListInfo();
+}
 //----------------------------------------------------------------------
 // ThreadTest1
 // 	Set up a ping-pong between two threads, by forking a thread 
 //	to call SimpleThread, and then calling SimpleThread ourselves.
 //----------------------------------------------------------------------
-
 void
 ThreadTest1()
 {
@@ -291,19 +351,13 @@ ThreadTest1()
     t1->Fork(SimpleThread, 1);
     t4->Fork(SimpleThread, 4);
     t3->Fork(SimpleThread, 3);
-    
-
     globalThreadManager->ShowListInfo();
-    
     SimpleThread(0);
 }
-
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
 //----------------------------------------------------------------------
-
-
 void
 ThreadTest()
 {
@@ -317,9 +371,11 @@ ThreadTest()
     case 3:
     ThreadTest3();
     break;
+    case 4:
+    ThreadTest4();
+    break;
     default:
 	printf("No test specified.\n");
 	break;
     }
 }
-
