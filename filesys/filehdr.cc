@@ -50,9 +50,25 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
     if (freeMap->NumClear() < numSectors)
 	return FALSE;		// not enough space
 
-    for (int i = 0; i < numSectors; i++)
-	dataSectors[i] = freeMap->Find();
-    return TRUE;
+
+    if (numSectors <= NumDirect)
+    {
+        for (int i = 0; i < numSectors; i++)
+	    dataSectors[i] = freeMap->Find();
+        return TRUE;
+    }
+    else
+    {
+        for (int i = 0; i < NumDirect - 1; i++)
+	        dataSectors[i] = freeMap->Find();
+        dataSectors[NumDirect-1] = freeMap->Find();
+        int secondIndex[32];
+        for(int  i = 0  ; i < numSectors - NumDirect + 1 ; i++)
+            secondIndex[i] = freeMap->Find();
+        synchDisk->WriteSector(dataSectors[NumDirect-1],(char *)secondIndex);
+        return TRUE;
+    }
+    
 }
 
 //----------------------------------------------------------------------
@@ -65,9 +81,21 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
 void 
 FileHeader::Deallocate(BitMap *freeMap)
 {
-    for (int i = 0; i < numSectors; i++) {
-	ASSERT(freeMap->Test((int) dataSectors[i]));  // ought to be marked!
-	freeMap->Clear((int) dataSectors[i]);
+    if (numSectors <= NumDirect)
+        for (int i = 0; i < numSectors; i++) 
+        {
+            ASSERT(freeMap->Test((int) dataSectors[i]));  // ought to be marked!
+            freeMap->Clear((int) dataSectors[i]);
+        }
+    else
+    {
+        char *secondIndex = new char[SectorSize];
+        synchDisk->ReadSector(dataSectors[NumDirect-1],secondIndex);
+        
+        for(int i = 0 ; i <numSectors- NumDirect + 1 ; i++ )
+            freeMap->Clear((int) secondIndex[i * 4]);
+        for(int i = 0 ; i < NumDirect ;i++)
+            freeMap->Clear((int) dataSectors[i]);
     }
 }
 
@@ -112,7 +140,17 @@ FileHeader::WriteBack(int sector)
 int
 FileHeader::ByteToSector(int offset)
 {
-    return(dataSectors[offset / SectorSize]);
+    if (offset < SectorSize*(NumDirect-1))
+        return(dataSectors[offset / SectorSize]);
+    else
+    {
+        int secondIndexPosition = (offset - (SectorSize*(NumDirect - 1)))/SectorSize;
+        char * secondIndex = new char[SectorSize];
+        synchDisk->ReadSector(dataSectors[NumDirect-1],secondIndex);
+        return  int(secondIndex[secondIndexPosition * 4]);
+    }
+    
+    
 }
 
 //----------------------------------------------------------------------
@@ -134,6 +172,10 @@ FileHeader::FileLength()
 void
 FileHeader::Print()
 {
+
+    printf("===========================\n");
+    printf("numDirect :%d \n" , NumDirect);
+    printf("===========================\n");
     int i, j, k;
     char *data = new char[SectorSize];
     struct tm * localCreateTime;
@@ -147,20 +189,74 @@ FileHeader::Print()
     printf("CreateTime : %d/%d/%d %d:%d:%d\n",localCreateTime->tm_year+1900,(localCreateTime->tm_mon+1)%13,localCreateTime->tm_mday,(localCreateTime->tm_hour+8)%24,localCreateTime->tm_min,localCreateTime->tm_sec);
     printf("LastVisitTime : %d/%d/%d %d:%d:%d\n",localVisitTime->tm_year+1900,(localVisitTime->tm_mon+1)%13,localVisitTime->tm_mday,(localVisitTime->tm_hour+8)%24,localVisitTime->tm_min,localVisitTime->tm_sec);
     printf("LastModifyTime : %d/%d/%d %d:%d:%d\n",localModifyTime->tm_year+1900,(localModifyTime->tm_mon+1)%13,localModifyTime->tm_mday,(localModifyTime->tm_hour+8)%24,localModifyTime->tm_min,localModifyTime->tm_sec);   
-    printf("File blocks:");
-    for (i = 0; i < numSectors; i++)
-	printf("%d ", dataSectors[i]);
-    printf("\nFile contents:\n");
-    for (i = k = 0; i < numSectors; i++) {
-	synchDisk->ReadSector(dataSectors[i], data);
-        for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
-	    if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
-		printf("%c", data[j]);
-            else
-		printf("\\%x", (unsigned char)data[j]);
-	}
-        printf("\n"); 
+    printf("File blocks:\n");
+
+    if (numSectors <= (NumDirect-1))
+        for (i = 0; i < numSectors; i++)
+            printf("%d ", dataSectors[i]);
+    else
+    {
+        printf("Direct index :");
+        for(i = 0 ; i < NumDirect -1 ; i ++)
+            printf("%d ",dataSectors[i]);
+        printf("\nSecond index Block : %d \n" , dataSectors[NumDirect-1]);
+        printf("Second index :");
+        char *secondIndex = new char[SectorSize];
+        synchDisk->ReadSector(dataSectors[NumDirect-1],secondIndex);
+        //int j = 0;
+        for(int i = 0 ; i < numSectors - NumDirect + 1 ; i++)
+        {
+            printf("%d " , int(secondIndex[i*4]));
+            //j = j + 4;
+        }
     }
+    printf("\nFile contents:\n");
+
+    if (numSectors <= (NumDirect-1))
+    {
+        for (i = k = 0; i < numSectors; i++) {
+        synchDisk->ReadSector(dataSectors[i], data);
+            for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
+            if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
+            printf("%c", data[j]);
+                else
+            printf("\\%x", (unsigned char)data[j]);
+        }
+            printf("\n"); 
+        }
+    }
+    else
+    {
+        for (i = k = 0; i < NumDirect-1; i++) 
+        {
+            printf("Sector:%d\n" , dataSectors[i]);
+            synchDisk->ReadSector(dataSectors[i], data);
+                for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) 
+                {
+                    if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
+                        printf("%c", data[j]);
+                    else
+                        printf("\\%x", (unsigned char)data[j]);
+                }
+                printf("\n"); 
+        }
+        char *secondIndex = new char[SectorSize];
+        synchDisk->ReadSector(dataSectors[NumDirect-1],secondIndex);
+        for(i = 0 ; i < numSectors-(NumDirect-1) ;i++)
+        {
+            printf("Sector:%d\n" , int(secondIndex[i*4]));
+            synchDisk->ReadSector(int(secondIndex[i*4]),data);
+            for(j = 0 ;(j < SectorSize) && (k < numBytes); j++, k++ )
+            {
+                if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
+                    printf("%c", data[j]);
+                else
+                    printf("\\%x", (unsigned char)data[j]);
+            }
+            printf("\n");
+        }
+    }
+    
     delete [] data;
 }
 

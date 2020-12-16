@@ -111,7 +111,7 @@ Print(char *name)
 #define FileName 	"TestFile"
 #define Contents 	"1234567890"
 #define ContentSize 	strlen(Contents)
-#define FileSize 	((int)(ContentSize * 5))
+#define FileSize 	((int)(ContentSize * 500))
 
 static void 
 FileWrite()
@@ -174,7 +174,7 @@ PerformanceTest()
 {
     printf("Starting file system performance test:\n");
     //stats->Print();
-    fileSystem->Print();
+    //fileSystem->Print();
     FileWrite();
     FileRead();
     fileSystem->Print();
@@ -182,7 +182,7 @@ PerformanceTest()
       printf("Perf test: unable to remove %s\n", FileName);
       return;
     }
-    fileSystem->Print();
+    //fileSystem->Print();
     //stats->Print();
 }
 

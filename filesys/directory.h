@@ -36,7 +36,7 @@ class DirectoryEntry {
 					//   FileHeader for this file 
     char name[FileNameMaxLen + 1];	// Text name for file, with +1 for 
 					// the trailing '\0'
-    char path[FilePathMaxLen + 1];
+    //char path[FilePathMaxLen + 1];
     bool type;//file type that descript the type of the file. 0 for dierectory file and 1 for normal file 
 
   
