@@ -84,7 +84,7 @@ class Lock {
 
   private:
     char* name;				// for debugging
-    
+
     Semaphore *lock;//使用信号量来同步和互斥锁
     Thread * heldthread; // 指向当前拥有锁的指针。
 
@@ -122,7 +122,7 @@ class Lock {
 // The consequence of using Mesa-style semantics is that some other thread
 // can acquire the lock, and change data structures, before the woken
 // thread gets a chance to run.
-
+//
 class Condition {
   public:
     Condition(char* debugName);		// initialize condition to 
@@ -145,3 +145,23 @@ class Condition {
     // plus some other stuff you'll need to define
 };
 #endif // SYNCH_H
+
+/*
+//------------------------------ Linux Kfifo imitatation mechine--------------------
+//
+//-------------------------------
+class Kfifo{
+public:
+    unsigned int in; // queue head pointer
+    unsigned int out; // queue tail pointer
+    Kfifo(int size); // constructor to initialize the var
+    ~Kfifo(); // destructor
+    int get_all_size(); // return the size of the queue buffer (generally should be power(2))
+    int get_remine_size(); // return the size can be used in queue buffer
+    bool put_into_queue(char* item , int size); // put an item into the queue buffer
+    bool get_from_queue(char* item , int size); // get out of an item from queue buffer
+private:
+    int size;
+    char *buffer;
+};
+*/

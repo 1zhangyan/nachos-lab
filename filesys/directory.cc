@@ -77,6 +77,7 @@ void
 Directory::WriteBack(OpenFile *file)
 {
     (void) file->WriteAt((char *)table, tableSize * sizeof(DirectoryEntry), 0);
+    
 }
 
 //----------------------------------------------------------------------
@@ -136,6 +137,9 @@ Directory::Add(char *name, int newSector)
         if (!table[i].inUse) {
             table[i].inUse = TRUE;
             strncpy(table[i].name, name, FileNameMaxLen); 
+            table[i].type = false;
+            char *path = "/";
+            strncpy(table[i].path, path, FilePathMaxLen); 
             table[i].sector = newSector;
         return TRUE;
 	}
@@ -188,7 +192,7 @@ Directory::Print()
     printf("Directory contents:\n");
     for (int i = 0; i < tableSize; i++)
 	if (table[i].inUse) {
-	    printf("Name: %s, Sector: %d\n", table[i].name, table[i].sector);
+	    printf("Name: %s, Sector: %d, Type: %d, path: %s \n", table[i].name, table[i].sector,table[i].type,table[i].path);
 	    hdr->FetchFrom(table[i].sector);
 	    hdr->Print();
 	}

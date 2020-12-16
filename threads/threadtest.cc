@@ -14,7 +14,7 @@
 #include "synch.h"
  
 // testnum is set in main.cc
-int testnum = 4 ;
+int testnum = 1 ;
 
 
 //公共锁和信号量
@@ -37,6 +37,7 @@ Lock *barrier_lock = new Lock("barrier_lock");
 Condition *barrier_cond = new Condition("barrier_cond");
 int countnum = 0;
 int threadnum = 0;
+int barrier_flag[4];
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -53,7 +54,7 @@ SimpleThread(int which)
     int num;
     for (num = 0; num < 5; num++) 
     {
-            printf("Thread t%d\t syntestnum1:%d\t syntestnum2:%d\n",which,syntestnum1,syntestnum2);
+            printf("Thread t%d\t loop num %d\t \n",which,num);
             currentThread->Yield();  
     }
     //globalThreadManager->ShowListInfo();
@@ -258,8 +259,8 @@ void ThreadTest2()
 //Threadtest3
 //int countnum = 0;
 //int threadnum = 0;
+//int barrier_flag[4];
 //--------------------------------
-int barrier_flag[4];
 
 void init_flag()
 {
@@ -330,6 +331,22 @@ void ThreadTest4()
     }
     globalThreadManager->ShowListInfo();
 }
+//-------------------------------------------------
+//KFIFO 1
+//-------------------------------------------------
+
+
+void ThreadTest5()
+{
+    DEBUG('t', "Entering ThreadTest1");
+    unsigned int a = 9;
+    a= a&(8-1);
+    printf("%d\n",a);
+}
+
+
+
+
 //----------------------------------------------------------------------
 // ThreadTest1
 // 	Set up a ping-pong between two threads, by forking a thread 
@@ -338,6 +355,7 @@ void ThreadTest4()
 void
 ThreadTest1()
 {
+    /*
     DEBUG('t', "Entering ThreadTest1");
     Thread *t1 = new Thread("SimpleThread");
     //t1->setPriority(9);
@@ -352,7 +370,7 @@ ThreadTest1()
     t4->Fork(SimpleThread, 4);
     t3->Fork(SimpleThread, 3);
     globalThreadManager->ShowListInfo();
-    SimpleThread(0);
+    SimpleThread(0);*/
 }
 //----------------------------------------------------------------------
 // ThreadTest
@@ -373,6 +391,9 @@ ThreadTest()
     break;
     case 4:
     ThreadTest4();
+    break;
+    case 5:
+    ThreadTest5();
     break;
     default:
 	printf("No test specified.\n");

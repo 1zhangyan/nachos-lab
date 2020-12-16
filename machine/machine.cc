@@ -80,7 +80,7 @@ MapPointer = 0;
     pageTable = NULL;
     printf("USED TLB\n");
 #else	// use linear page table  
-    printf("USED Linear page table\n");
+    //printf("USED Linear page table\n");
     tlb = NULL;
     pageTable = new TranslationEntry[NumPhysPages];
     for(int i = 0 ; i < NumPhysPages ; i++)

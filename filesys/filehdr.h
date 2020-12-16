@@ -11,14 +11,16 @@
 
 #include "copyright.h"
 
+#include <time.h>
 #ifndef FILEHDR_H
 #define FILEHDR_H
 
 #include "disk.h"
 #include "bitmap.h"
 
-#define NumDirect 	((SectorSize - 2 * sizeof(int)) / sizeof(int))
-#define MaxFileSize 	(NumDirect * SectorSize)
+#define NumDirect 	((SectorSize - 5 * sizeof(int)) / sizeof(int)) // 一个文件27个扇区
+#define MaxFileSize 	(NumDirect * SectorSize)//最大文件长度
+
 
 // The following class defines the Nachos "file header" (in UNIX terms,  
 // the "i-node"), describing where on disk to find all of the data in the file.
@@ -50,17 +52,34 @@ class FileHeader {
     int ByteToSector(int offset);	// Convert a byte offset into the file
 					// to the disk sector containing
 					// the byte
+          //根据偏移来算出该偏移所在的扇区
 
     int FileLength();			// Return the length of the file 
 					// in bytes
 
     void Print();			// Print the contents of the file.
 
+//-----------------------------------
+//-----------------------------------
+    void SetCreatTime();
+    void SetLastVisitTime();
+    void SetLastModifyTime();
+
+    time_t GetCreatTime();
+    time_t GetLastVistTime();
+    time_t GetLastModifyTime();
+
+
+public:
+    time_t createTime;
+    time_t lastVistTime;
+    time_t lastModifyTime;
+//-------------------------------------
+//-------------------------------------
   private:
-    int numBytes;			// Number of bytes in the file
-    int numSectors;			// Number of data sectors in the file
-    int dataSectors[NumDirect];		// Disk sector numbers for each data 
-					// block in the file
+    int numBytes;			// Number of bytes in the file文件具体大小
+    int numSectors;			// Number of data sectors in the file文件所占扇区大小
+    int dataSectors[NumDirect];		// Disk sector numbers for each data  block in the file文件具体所在的扇区
 };
 
 #endif // FILEHDR_H

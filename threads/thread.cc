@@ -264,7 +264,7 @@ Thread::Sleep ()
 	interrupt->Idle();
     }	// no one to run, wait for an interrupt
 
-    printf("current thread %s gone sleep , next thread %s is going running\n",currentThread->getName(),nextThread->getName());
+    //printf("current thread %s gone sleep , next thread %s is going running\n",currentThread->getName(),nextThread->getName());
     scheduler->Run(nextThread); // returns when we've been signalled
 }
 

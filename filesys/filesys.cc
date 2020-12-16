@@ -181,7 +181,7 @@ FileSystem::Create(char *name, int initialSize)
     bool success;
 
     DEBUG('f', "Creating file %s, size %d\n", name, initialSize);
-
+    printf("Creating file %s, size %d\n", name, initialSize);
     directory = new Directory(NumDirEntries);
     directory->FetchFrom(directoryFile);
 

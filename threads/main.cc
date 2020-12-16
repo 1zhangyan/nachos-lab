@@ -50,6 +50,7 @@
 #include "copyright.h"
 #undef MAIN
 
+
 #include "utility.h"
 #include "system.h"
 
@@ -96,7 +97,7 @@ main(int argc, char **argv)
         argCount++;
         break;
       default:
-        testnum = 4;
+        testnum = 1	;
         break;
       }
     }
@@ -140,7 +141,8 @@ main(int argc, char **argv)
 	    fileSystem->Remove(*(argv + 1));
 	    argCount = 2;
 	} else if (!strcmp(*argv, "-l")) {	// list Nachos directory
-            fileSystem->List();
+			printf("======== File List==========\n");
+			fileSystem->List();
 	} else if (!strcmp(*argv, "-D")) {	// print entire filesystem
             fileSystem->Print();
 	} else if (!strcmp(*argv, "-t")) {	// performance test
@@ -158,7 +160,6 @@ main(int argc, char **argv)
         }
 #endif // NETWORK
     }
-
     currentThread->Finish();	// NOTE: if the procedure "main" 
 				// returns, then the program "nachos"
 				// will exit (as any other normal program
@@ -167,5 +168,5 @@ main(int argc, char **argv)
 				// to those threads by saying that the
 				// "main" thread is finished, preventing
 				// it from returning.
-    return(0);			// Not reached...
+	return(0);			// Not reached...
 }

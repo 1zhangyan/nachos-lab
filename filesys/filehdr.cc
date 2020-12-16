@@ -41,6 +41,10 @@
 bool
 FileHeader::Allocate(BitMap *freeMap, int fileSize)
 { 
+    SetCreatTime();
+    SetLastVisitTime();
+    SetLastModifyTime();
+
     numBytes = fileSize;
     numSectors  = divRoundUp(fileSize, SectorSize);
     if (freeMap->NumClear() < numSectors)
@@ -78,6 +82,7 @@ void
 FileHeader::FetchFrom(int sector)
 {
     synchDisk->ReadSector(sector, (char *)this);
+    SetLastVisitTime();
 }
 
 //----------------------------------------------------------------------
@@ -90,6 +95,7 @@ FileHeader::FetchFrom(int sector)
 void
 FileHeader::WriteBack(int sector)
 {
+    SetLastModifyTime();
     synchDisk->WriteSector(sector, (char *)this); 
 }
 
@@ -125,14 +131,23 @@ FileHeader::FileLength()
 // 	Print the contents of the file header, and the contents of all
 //	the data blocks pointed to by the file header.
 //----------------------------------------------------------------------
-
 void
 FileHeader::Print()
 {
     int i, j, k;
     char *data = new char[SectorSize];
-
-    printf("FileHeader contents.  File size: %d.  File blocks:\n", numBytes);
+    struct tm * localCreateTime;
+    struct tm * localVisitTime;
+    struct tm * localModifyTime;
+    localCreateTime = localtime(&createTime);
+    localVisitTime =  localtime(&lastVistTime);
+    localModifyTime = localtime(&lastModifyTime);
+    
+    printf("FileHeader contents.  File size: %d.\n", numBytes);
+    printf("CreateTime : %d/%d/%d %d:%d:%d\n",localCreateTime->tm_year+1900,(localCreateTime->tm_mon+1)%13,localCreateTime->tm_mday,(localCreateTime->tm_hour+8)%24,localCreateTime->tm_min,localCreateTime->tm_sec);
+    printf("LastVisitTime : %d/%d/%d %d:%d:%d\n",localVisitTime->tm_year+1900,(localVisitTime->tm_mon+1)%13,localVisitTime->tm_mday,(localVisitTime->tm_hour+8)%24,localVisitTime->tm_min,localVisitTime->tm_sec);
+    printf("LastModifyTime : %d/%d/%d %d:%d:%d\n",localModifyTime->tm_year+1900,(localModifyTime->tm_mon+1)%13,localModifyTime->tm_mday,(localModifyTime->tm_hour+8)%24,localModifyTime->tm_min,localModifyTime->tm_sec);   
+    printf("File blocks:");
     for (i = 0; i < numSectors; i++)
 	printf("%d ", dataSectors[i]);
     printf("\nFile contents:\n");
@@ -147,4 +162,37 @@ FileHeader::Print()
         printf("\n"); 
     }
     delete [] data;
+}
+
+//------fileAddOperation
+void
+FileHeader::SetCreatTime()
+{
+   createTime = time(NULL);
+}
+void
+FileHeader::SetLastVisitTime()
+{
+    lastVistTime  = time(NULL);
+}
+void 
+FileHeader::SetLastModifyTime()
+{
+    lastModifyTime = time(NULL);
+}
+
+time_t 
+FileHeader::GetCreatTime()
+{
+    return createTime;
+}
+time_t 
+FileHeader::GetLastVistTime()
+{
+    return lastVistTime;
+}
+time_t 
+FileHeader::GetLastModifyTime()
+{
+    return lastModifyTime;
 }

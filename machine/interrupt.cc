@@ -247,7 +247,7 @@ Interrupt::Halt()
 {
    // globalThreadManager->ShowListInfo();
 
-    printf("Assuming the program memory has been recllected.\n");
+    //printf("Assuming the program memory has been recllected.\n");
     #ifdef USE_TLB
     double missrate = (machine->misstimes)*100.00/(machine->findtimes - machine->misstimes);
     printf("ALL:%d   Miss:%d   MissRate:%.2lf% \n",machine->findtimes,machine->misstimes,missrate);

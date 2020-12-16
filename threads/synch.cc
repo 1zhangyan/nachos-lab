@@ -68,7 +68,7 @@ Semaphore::P()
     
     while (value == 0) { 			// semaphore not available
 	queue->Append((void *)currentThread);	// so go to sleep
-    printf("%s Go to sleep\n" , currentThread->getName());
+    //printf("%s Go to sleep\n" , currentThread->getName());
 	currentThread->Sleep();
     } 
     value--; 					// semaphore available, 
@@ -116,7 +116,7 @@ Lock::~Lock()
 }
 
 //------------------------------------------------------
-void Lock::Acquire() 
+void Lock:: Acquire() 
 {   
     //IntStatus oldLevel = interrupt->SetLevel(IntOff);
     lock->P();
@@ -128,8 +128,11 @@ void Lock::Acquire()
 void Lock::Release() 
 {
     //IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    heldthread = NULL;
-    lock->V();  
+    if(isHeldByCurrentThread()==true)
+    {
+        heldthread = NULL;
+        lock->V();
+    }  
     //(void) interrupt->SetLevel(oldLevel);
 }
 
@@ -189,3 +192,62 @@ void Condition::Broadcast(Lock* conditionLock)
     (void) interrupt->SetLevel(oldLevel);
     
 }
+
+
+//----------------------------------------------------------
+//------- Class Kfifo Realization Code ----------------------
+/*     Definintion of the Kfifo ::
+class Kfifo{
+public:
+    unsigned int in; // queue head pointer
+    unsigned int out; // queue tail pointer
+    Kfifo(int size); // constructor to initialize the var
+    ~Kfifo(); // destructor
+    int get_all_size(); // return the size of the queue buffer (generally should be power(2))
+    int get_remine_size(); // return the size can be used in queue buffer
+    bool put_into_queue(char* item , int size); // put an item into the queue buffer
+    bool get_from_queue(char* item , int size); // get out of an item from queue buffer
+private:
+    int size;
+    char *buffer;
+};
+*/ 
+//-----------------------------------------------------------
+/*
+Kfifo::Kfifo(int size)
+{
+    in = 0;
+    out = 0;
+    size = size;
+    char *buffer = new char[size];
+}
+
+Kfifo::~Kfifo()
+{
+    delete buffer;
+}
+
+int Kfifo::get_all_size()
+{
+    return size;
+}
+int Kfifo::get_remine_size()
+{
+    
+}
+
+bool Kfifo::get_from_queue(char* item , int size)
+{
+    size = size>get_remine_size()?get_remine_size():size;
+    for(int i = 0 ; i < size ; i++)
+    {
+        item[i]  = buffer[out++];     //out should be dealt with outofmem
+    }
+    return true;
+}
+
+bool Kfifo::put_into_queue(char* item , int size)
+{
+
+}
+*/
