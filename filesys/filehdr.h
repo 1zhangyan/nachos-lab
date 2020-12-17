@@ -59,6 +59,8 @@ class FileHeader {
 
     void Print();			// Print the contents of the file.
 
+    bool ExtendFile(BitMap * freeMap , int bytes );
+
 //-----------------------------------
 //-----------------------------------
     void SetCreatTime();

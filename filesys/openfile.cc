@@ -30,6 +30,7 @@
 OpenFile::OpenFile(int sector)
 { 
     hdr = new FileHeader;
+    fileHdrSector = sector;
     hdr->FetchFrom(sector);
     seekPosition = 0;
 }
@@ -76,7 +77,7 @@ OpenFile::Read(char *into, int numBytes)
 {
    int result = ReadAt(into, numBytes, seekPosition);
    seekPosition += result;
-   hdr->SetLastVisitTime();
+   //hdr->SetLastVisitTime();
    return result;
 }
 
@@ -85,7 +86,7 @@ OpenFile::Write(char *into, int numBytes)
 {
    int result = WriteAt(into, numBytes, seekPosition);
    seekPosition += result;
-   hdr->SetLastVisitTime();
+   //hdr->SetLastVisitTime();
    return result;
 }
 
@@ -154,10 +155,21 @@ OpenFile::WriteAt(char *from, int numBytes, int position)
     bool firstAligned, lastAligned;
     char *buf;
 
-    if ((numBytes <= 0) || (position >= fileLength))
-	return 0;				// check request
+    //if ((numBytes <= 0) || (position >= fileLength))
+	if(numBytes<=0)
+    return 0;				// check request
     if ((position + numBytes) > fileLength)
-	numBytes = fileLength - position;
+	{
+        BitMap *freeMap = new BitMap(NumSectors);
+        OpenFile* freeMapFile = new OpenFile(0);
+	    freeMap->FetchFrom(freeMapFile);
+        hdr->ExtendFile(freeMap , position+numBytes-fileLength); 
+        hdr->WriteBack(fileHdrSector);
+        freeMap->WriteBack(freeMapFile);
+        delete freeMapFile;
+    }
+    
+    //numBytes = fileLength - position;
     DEBUG('f', "Writing %d bytes at %d, from file of length %d.\n", 	
 			numBytes, position, fileLength);
 

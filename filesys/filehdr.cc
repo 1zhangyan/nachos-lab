@@ -260,6 +260,36 @@ FileHeader::Print()
     delete [] data;
 }
 
+
+//-----------------
+//
+//----------------
+bool
+FileHeader::ExtendFile(BitMap *freeMap , int bytes)
+{
+    int newFileLength = numBytes + bytes;
+    int preSectorNum = numSectors;
+    int newNumSectors = divRoundUp(newFileLength,SectorSize);
+    if(newNumSectors == preSectorNum)
+    {
+        numBytes = newFileLength;
+        return true;
+    }
+    if (freeMap->NumClear() < newNumSectors - preSectorNum)
+        return false;
+    printf("\nNedd Extend %d Sectors" , newNumSectors - preSectorNum);
+    printf("New Allocate Sectors Index :");
+    for (int i = preSectorNum; i < newNumSectors ; i++)
+    {
+        int temp = freeMap->Find();
+        dataSectors[i] = temp;
+        printf(" %d\n", temp);
+        numBytes = newFileLength;
+        numSectors = newNumSectors;
+        return true;
+    }
+}
+
 //------fileAddOperation
 void
 FileHeader::SetCreatTime()
