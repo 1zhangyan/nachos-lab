@@ -85,6 +85,7 @@ if (executable2 == NULL) {
 // I/O requests wait on a Semaphore to delay until the I/O completes.
 
 static Console *console;
+static SynchConsole *synchConsole;
 static Semaphore *readAvail;
 static Semaphore *writeDone;
 
@@ -105,8 +106,9 @@ static void WriteDone(int arg) { writeDone->V(); }
 void 
 ConsoleTest (char *in, char *out)
 {
+    //code pre 
     char ch;
-
+    /*
     console = new Console(in, out, ReadAvail, WriteDone, 0);
     readAvail = new Semaphore("read avail", 0);
     writeDone = new Semaphore("write done", 0);
@@ -117,5 +119,14 @@ ConsoleTest (char *in, char *out)
 	console->PutChar(ch);	// echo it!
 	writeDone->P() ;        // wait for write to finish
 	if (ch == 'q') return;  // if q, quit
-    }
+    }*/
+
+  //Exercise Add Code 
+  synchConsole = new SynchConsole(in ,out);
+  for(;;)
+  {
+      ch = synchConsole->GetChar();
+      synchConsole->PutChar(ch);
+      if (ch == 'q') return ;
+  }
 }

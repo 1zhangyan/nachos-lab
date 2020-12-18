@@ -87,7 +87,7 @@ class OpenFile {
 					// end of file, tell, lseek back 
     
   private:
-	int fileHdrSector;
+	int fileSector;
     FileHeader *hdr;			// Header for this file 
     int seekPosition;			// Current position within the file
 };

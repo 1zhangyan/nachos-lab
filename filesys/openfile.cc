@@ -30,7 +30,7 @@
 OpenFile::OpenFile(int sector)
 { 
     hdr = new FileHeader;
-    fileHdrSector = sector;
+    fileSector = sector;
     hdr->FetchFrom(sector);
     seekPosition = 0;
 }
@@ -42,6 +42,7 @@ OpenFile::OpenFile(int sector)
 
 OpenFile::~OpenFile()
 {
+    printf("CLOSE FILE================\n");
     delete hdr;
 }
 
@@ -156,7 +157,7 @@ OpenFile::WriteAt(char *from, int numBytes, int position)
     char *buf;
 
     //if ((numBytes <= 0) || (position >= fileLength))
-	if(numBytes<=0)
+	if(numBytes <= 0)
     return 0;				// check request
     if ((position + numBytes) > fileLength)
 	{
@@ -164,7 +165,7 @@ OpenFile::WriteAt(char *from, int numBytes, int position)
         OpenFile* freeMapFile = new OpenFile(0);
 	    freeMap->FetchFrom(freeMapFile);
         hdr->ExtendFile(freeMap , position+numBytes-fileLength); 
-        hdr->WriteBack(fileHdrSector);
+        hdr->WriteBack(fileSector);
         freeMap->WriteBack(freeMapFile);
         delete freeMapFile;
     }

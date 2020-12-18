@@ -87,6 +87,12 @@ class Thread {
     int new_add_uid;
     int new_add_pid;
     int used_time_slice;
+    
+    int fileHandler;
+    int filePointer;
+
+
+
     Thread(char* debugName);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted

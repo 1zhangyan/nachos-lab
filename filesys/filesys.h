@@ -38,6 +38,7 @@
 #include "copyright.h"
 #include "openfile.h"
 
+#define MAXTHREADNUM 128
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
 				// calls to UNIX, until the real file system
 				// implementation is available
@@ -67,6 +68,8 @@ class FileSystem {
 #else // FILESYS
 class FileSystem {
   public:
+    int OpenFileTable[MAXTHREADNUM];
+  //打开文件表
     FileSystem(bool format);		// Initialize the file system.
 					// Must be called *afgter* "synchDisk" 
 					// has been initialized.

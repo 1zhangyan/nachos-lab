@@ -79,6 +79,10 @@
 
 FileSystem::FileSystem(bool format)
 { 
+    for(int i = 0 ; i < MAXTHREADNUM ; i++)
+    {
+        OpenFileTable[i] = -1;
+    }
     DEBUG('f', "Initializing the file system.\n");
     if (format) {
         BitMap *freeMap = new BitMap(NumSectors);
