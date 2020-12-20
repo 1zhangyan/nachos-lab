@@ -45,6 +45,13 @@ SynchDisk::SynchDisk(char* name)
     semaphore = new Semaphore("synch disk", 0);
     lock = new Lock("synch disk lock");
     disk = new Disk(name, DiskRequestDone, (int) this);
+    for (int i = 0 ; i < NumSectors ; i ++)
+    {
+        readerWtiterSemap[i] = new  Semaphore("readerWriterSemap" , 1);
+        readerNum[i] = 0;
+        visitorNum[i] = 0;
+    }
+    readerLock = new Lock("readerLock");
 }
 
 //----------------------------------------------------------------------
@@ -106,4 +113,49 @@ void
 SynchDisk::RequestDone()
 { 
     semaphore->V();
+}
+
+
+//读写同步相关函数
+
+void 
+SynchDisk::SynchReaderStart(int sector)
+{
+    readerLock->Acquire();
+    readerNum[sector]++;
+    if (readerNum[sector] == 1)
+        readerWtiterSemap[sector]->P();
+    printf("SynchReaderStart The reader num : %d read sector : %d\n" , readerNum[sector] , sector);
+    readerLock->Release();
+}
+
+
+
+void
+SynchDisk::SynchReaderExit(int sector)
+{
+    readerLock->Acquire();
+    readerNum[sector]--;
+    if(readerNum[sector] == 0)
+        readerWtiterSemap[sector]->V();
+    printf("SynchReaderExit The reader num : %d read sector : %d\n" , readerNum[sector] , sector);
+    readerLock->Release();
+}
+
+
+void 
+SynchDisk::SynchWriterStart(int sector)
+{
+    readerWtiterSemap[sector]->P();
+    printf("Writer is writing\n");
+}
+
+
+
+void 
+SynchDisk::SynchWriterExit(int sector)
+{
+    printf("Writer is Exiting\n");
+    readerWtiterSemap[sector]->V();
+    
 }

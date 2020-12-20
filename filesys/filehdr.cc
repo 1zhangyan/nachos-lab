@@ -110,6 +110,7 @@ void
 FileHeader::FetchFrom(int sector)
 {
     synchDisk->ReadSector(sector, (char *)this);
+    // hdrSector = sector;
     SetLastVisitTime();
 }
 
@@ -124,6 +125,7 @@ void
 FileHeader::WriteBack(int sector)
 {
     SetLastModifyTime();
+    hdrSector = sector;
     synchDisk->WriteSector(sector, (char *)this); 
 }
 
@@ -277,7 +279,7 @@ FileHeader::ExtendFile(BitMap *freeMap , int bytes)
     }
     if (freeMap->NumClear() < newNumSectors - preSectorNum)
         return false;
-    printf("\nNedd Extend %d Sectors" , newNumSectors - preSectorNum);
+    printf("\nNeed Extend %d Sectors" , newNumSectors - preSectorNum);
     printf("New Allocate Sectors Index :");
     for (int i = preSectorNum; i < newNumSectors ; i++)
     {

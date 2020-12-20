@@ -18,7 +18,7 @@
 #include "disk.h"
 #include "bitmap.h"
 
-#define NumDirect 	((SectorSize - 5 * sizeof(int)) / sizeof(int)) // 一个文件27个扇区
+#define NumDirect 	((SectorSize - 6 * sizeof(int)) / sizeof(int)) // 一个文件26个扇区
 #define MaxFileSize 	(NumDirect * SectorSize)//最大文件长度
 
 
@@ -76,6 +76,7 @@ public:
     time_t createTime;
     time_t lastVistTime;
     time_t lastModifyTime;
+    int hdrSector;
 //-------------------------------------
 //-------------------------------------
   private:

@@ -33,6 +33,7 @@ OpenFile::OpenFile(int sector)
     fileSector = sector;
     hdr->FetchFrom(sector);
     seekPosition = 0;
+    synchDisk->visitorNum[sector]++;
 }
 
 //----------------------------------------------------------------------
@@ -42,7 +43,8 @@ OpenFile::OpenFile(int sector)
 
 OpenFile::~OpenFile()
 {
-    printf("CLOSE FILE================\n");
+    //printf("CLOSE FILE================\n");
+    synchDisk->visitorNum[fileSector]--;
     delete hdr;
 }
 
@@ -76,18 +78,22 @@ OpenFile::Seek(int position)
 int
 OpenFile::Read(char *into, int numBytes)
 {
+   synchDisk->SynchReaderStart(fileSector);
    int result = ReadAt(into, numBytes, seekPosition);
    seekPosition += result;
    //hdr->SetLastVisitTime();
+   synchDisk->SynchReaderExit(fileSector);
    return result;
 }
 
 int
 OpenFile::Write(char *into, int numBytes)
 {
+    synchDisk->SynchWriterStart(fileSector);
    int result = WriteAt(into, numBytes, seekPosition);
    seekPosition += result;
    //hdr->SetLastVisitTime();
+   synchDisk->SynchWriterExit(fileSector);
    return result;
 }
 
@@ -165,7 +171,8 @@ OpenFile::WriteAt(char *from, int numBytes, int position)
         OpenFile* freeMapFile = new OpenFile(0);
 	    freeMap->FetchFrom(freeMapFile);
         hdr->ExtendFile(freeMap , position+numBytes-fileLength); 
-        hdr->WriteBack(fileSector);
+        //printf("hdrsector:%d===========filesector:%d=========\n" , hdr->hdrSector, fileSector);
+        hdr->WriteBack(hdr->hdrSector  );
         freeMap->WriteBack(freeMapFile);
         delete freeMapFile;
     }
