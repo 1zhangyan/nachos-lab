@@ -184,14 +184,15 @@ PerformanceTest()
     //stats->Print();
     //fileSystem->Print();
     FileWrite();
+    printf("=================\n");
     //read(3);
-    //Thread *t1 = new Thread("Reader1");
-    //Thread *t2 = new Thread("Reader2");
-    //t1->Fork(read ,1);
-    //t2->Fork(read ,2);
+    Thread *t1 = new Thread("Reader1");
+    Thread *t2 = new Thread("Reader2");
+    t1->Fork(read ,1);
+    t2->Fork(read ,2);
     //FileRead();
-    //read(3);    
-    fileSystem->Print();
+    read(3);    
+    //fileSystem->Print();
     if (!fileSystem->Remove(FileName)) {
       printf("Perf test: unable to remove %s\n", FileName);
       return;
@@ -199,4 +200,5 @@ PerformanceTest()
     //fileSystem->Print();
     //stats->Print();
 }
+
 

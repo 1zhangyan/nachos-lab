@@ -58,12 +58,14 @@ class SynchDisk {
   Lock *readerLock;
   int visitorNum[NumSectors];
 
-  Cache cache[4] ;
+  
   //读写同步相关函数
   void SynchReaderStart(int sector);
   void SynchReaderExit(int sector);
   void SynchWriterStart(int sector);
   void SynchWriterExit(int sector);
+  
+  Cache cache[4] ;
   int FiFoPointer;
 
   private:
