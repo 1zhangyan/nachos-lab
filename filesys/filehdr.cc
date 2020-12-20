@@ -53,12 +53,24 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
 
     if (numSectors <= NumDirect)
     {
-        for (int i = 0; i < numSectors; i++)
-	    dataSectors[i] = freeMap->Find();
+        int freeSpace = freeMap->FirstFind(numSectors); 
+        printf("freespace = %d =====================\n"  , freeSpace);
+        if(freeSpace != -1)
+        {
+            for(int  i = 0 ;  i < numSectors ; i++)
+                dataSectors[i] = freeSpace + i;
+        }
+        else
+        {
+            for(int  i = 0  ; i < numSectors ; i++)
+            dataSectors[i] = freeMap->Find();
+        }
+
         return TRUE;
     }
     else
     {
+        
         for (int i = 0; i < NumDirect - 1; i++)
 	        dataSectors[i] = freeMap->Find();
         dataSectors[NumDirect-1] = freeMap->Find();
@@ -67,6 +79,7 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
             secondIndex[i] = freeMap->Find();
         synchDisk->WriteSector(dataSectors[NumDirect-1],(char *)secondIndex);
         return TRUE;
+
     }
     
 }

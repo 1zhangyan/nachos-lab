@@ -147,7 +147,7 @@ void
 SynchDisk::SynchWriterStart(int sector)
 {
     readerWtiterSemap[sector]->P();
-    printf("Writer is writing\n");
+    //printf("Writer is writing\n");
 }
 
 
@@ -155,7 +155,7 @@ SynchDisk::SynchWriterStart(int sector)
 void 
 SynchDisk::SynchWriterExit(int sector)
 {
-    printf("Writer is Exiting\n");
+    //printf("Writer is Exiting\n");
     readerWtiterSemap[sector]->V();
     
 }
