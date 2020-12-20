@@ -24,6 +24,16 @@
 // This class provides the abstraction that for any individual thread
 // making a request, it waits around until the operation finishes before
 // returning.
+
+class Cache
+{
+  public:
+     int valid;
+     int sector;
+     char data[SectorSize];
+};
+
+
 class SynchDisk {
   public:
     SynchDisk(char* name);    		// Initialize a synchronous disk,
@@ -48,11 +58,13 @@ class SynchDisk {
   Lock *readerLock;
   int visitorNum[NumSectors];
 
+  Cache cache[4] ;
   //读写同步相关函数
   void SynchReaderStart(int sector);
   void SynchReaderExit(int sector);
   void SynchWriterStart(int sector);
   void SynchWriterExit(int sector);
+  int FiFoPointer;
 
   private:
     Disk *disk;		  		// Raw disk device

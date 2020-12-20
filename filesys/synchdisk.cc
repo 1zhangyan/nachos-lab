@@ -52,6 +52,7 @@ SynchDisk::SynchDisk(char* name)
         visitorNum[i] = 0;
     }
     readerLock = new Lock("readerLock");
+    FiFoPointer = 0;
 }
 
 //----------------------------------------------------------------------
@@ -79,8 +80,33 @@ SynchDisk::~SynchDisk()
 void
 SynchDisk::ReadSector(int sectorNumber, char* data)
 {
+
     lock->Acquire();			// only one disk I/O at a time
-    disk->ReadRequest(sectorNumber, data);
+    
+    int find = -1;
+    for(int i = 0 ; i < 4 ; i ++)
+    {
+        if(cache[i].valid==1&&cache[i].sector==sectorNumber)
+        {
+            find = i;
+            break;
+        }
+    }
+    if (find == -1)
+    {
+        disk->ReadRequest(sectorNumber, data);
+        cache[FiFoPointer].valid = 1;
+        cache[FiFoPointer].sector = sectorNumber;
+        bcopy(data , cache[FiFoPointer].data , SectorSize);
+        FiFoPointer = (FiFoPointer+1)%4;
+    }
+    else
+    {
+        bcopy(cache[find].data,data,SectorSize);
+        disk->HandleInterrupt();
+    }
+
+    //disk->ReadRequest(sectorNumber, data);
     semaphore->P();			// wait for interrupt
     lock->Release();
 }
