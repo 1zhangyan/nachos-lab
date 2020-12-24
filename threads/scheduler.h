@@ -55,7 +55,7 @@ bool AddNewThreadtoList(Thread *thread);
 bool RemoveThreadFromList(Thread *thread);
 void ShowListInfo();
 
-private:
+public:
   Thread * GlobalThreadList [MAXTHREADNUM];
 };
 

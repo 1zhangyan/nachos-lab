@@ -106,16 +106,16 @@ Thread::Fork(VoidFunctionPtr func, int arg)
     StackAllocate(func, arg);
 
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    scheduler->ReadyToRun(this);	
+    scheduler->ReadyToRun(this);
     // ReadyToRun assumes that interrupts 
-    //scheduler->ReadyToRun(currentThread);
-    
-    /*Thread *nextThread = scheduler->FindNextToRun();
+    /*
+    scheduler->ReadyToRun(currentThread);
+    Thread *nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL)
     {
-	scheduler->Run(nextThread);
-    }
-    */
+	    scheduler->Run(nextThread);
+    }*/
+    
     (void) interrupt->SetLevel(oldLevel);
 }    
 
@@ -261,6 +261,7 @@ Thread::Sleep ()
     status = BLOCKED;
     while ((nextThread = scheduler->FindNextToRun()) == NULL)
     {
+    //printf("No other thread currentthread : %s\n",currentThread->getName());
 	interrupt->Idle();
     }	// no one to run, wait for an interrupt
 
@@ -361,3 +362,19 @@ Thread::RestoreUserState()
 	machine->WriteRegister(i, userRegisters[i]);
 }
 #endif
+
+void 
+Thread::SetFileName(char *name)
+{
+    int  i = 0 ;
+    while(true)
+    {
+        if(name[i] == '\0')
+        {
+            filename[i] = name[i];
+            break;
+        }
+        filename[i] = name[i];
+        i++;
+    }
+}

@@ -14,7 +14,7 @@
 //#include "syscall.h"
 //#include "../userprog/machine.h"
 
-#define ARRLEN 900
+#define ARRLEN 10
 
 int A[ARRLEN];	/* size of physical memory; with code, we'll run out of space!*/
 
@@ -36,10 +36,12 @@ main()
 	      A[j] = A[j + 1];
 	      A[j + 1] = tmp;
     	   }
-    //Exit(A[0]);		// and then we're done -- should be 0!     
+    Exit(A[ARRLEN]);		// and then we're done -- should be 0!     
     //interrupt->Exit_user_pro();
-    Halt();
-    //return 0;
+    //Yield();
+
+
+   // return 0;
     //USER_PRO_EXIT();
     
     

@@ -8,10 +8,7 @@
 
 #include "copyright.h"
 #include "bitmap.h"
-#include "system.h"
 
-
-//#define Pagesize 128
 //----------------------------------------------------------------------
 // BitMap::BitMap
 // 	Initialize a bitmap with "nitems" bits, so that every bit is clear.
@@ -22,11 +19,9 @@
 
 BitMap::BitMap(int nitems) 
 { 
-   // MapPointer = 0;
     numBits = nitems;
     numWords = divRoundUp(numBits, BitsInWord);
     map = new unsigned int[numWords];
-    //MapPointer = 0;
     for (int i = 0; i < numBits; i++) 
         Clear(i);
 }
@@ -99,54 +94,13 @@ BitMap::Test(int which)
 int 
 BitMap::Find() 
 {
-//=================用于内存分配 附带脏页回写==============
-/*
-    int i = machine->MapPointer;
-    if (machine->pageTable[i].dirty == TRUE)
-    {
-        printf("Rewrite Dirty Page:%d\n",i);
-        OpenFile *executable = fileSystem->Open("VirtualMemory");
-        //executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
-
-        int vaddr = machine->pageTable[i].virtualPage*PageSize;
-        int paddr = machine->pageTable[i].physicalPage*PageSize;
-
-        executable->WriteAt(&(machine->mainMemory[paddr]),PageSize, vaddr);
-        delete executable;
-    }
-    
-    machine->SetpageTable(i,0,0,FALSE,FALSE,FALSE,FALSE,0);
-    machine->MapPointer = (i+1)%32;
-    return i;
-*/
-//===========================================================
     for (int i = 0; i < numBits; i++)
-    if (!Test(i)) {
+	if (!Test(i)) {
 	    Mark(i);
 	    return i;
 	}
     return -1;
 }
-
-int 
-BitMap::FirstFind( int size) 
-{
-    for(int i = 0 ; i < numBits ; i++)
-    {
-        int flag = 1 ;
-        for(int j = 0 ; j < size ; j++)
-            if(Test(i + j)) 
-                flag = 0; 
-        if(flag)
-        {
-            for(int j = 0 ; j < size ; j++)
-                    Mark(i+j);
-        return i;
-        }
-    }
-        return -1;
-}
-
 
 //----------------------------------------------------------------------
 // BitMap::NumClear

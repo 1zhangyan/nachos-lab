@@ -98,6 +98,8 @@ Scheduler::Run (Thread *nextThread)
 {
     Thread *oldThread = currentThread;
 
+
+
 #ifdef USER_PROGRAM			// ignore until running user programs 
     if (currentThread->space != NULL) {	// if this thread is a user program,
         currentThread->SaveUserState(); // save the user's CPU registers
@@ -129,8 +131,10 @@ Scheduler::Run (Thread *nextThread)
     if (threadToBeDestroyed != NULL) {
         //printf("DELETINH threadToBeDestroyed\n");
         delete threadToBeDestroyed;
-	threadToBeDestroyed = NULL;
+	    threadToBeDestroyed = NULL;
     }
+    
+
     
 #ifdef USER_PROGRAM
     if (currentThread->space != NULL) {		// if there is an address space
@@ -203,6 +207,9 @@ bool GlobalThreadManager::RemoveThreadFromList(Thread *thread)
     //printf("Can Not Find the Thread Pointed!\n");
     return false;
 }
+
+
+
 void GlobalThreadManager::ShowListInfo()
 {
     for(int i = 0 ; i < MAXTHREADNUM ; i++)

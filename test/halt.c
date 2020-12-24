@@ -11,10 +11,36 @@
  */
 
 #include "syscall.h"
+//#include <stdio.h>
 
+void
+testfunc()
+{
+    Open("testfile");
+    Exit(0);
+}
 int
 main()
 {
+    //Fork(testfunc);
+Exit(0);
+    /*Create("testfile");
+    int id = Open("testfile");
+    char * buffer = "0123456789012345678";
+    Write(buffer, 10, id);
+    Read(buffer, 10, Open("testfile"));
+    */
+    //char *buffer;
+    //
+    //Close(id);
+    //Fork(void (*func)());
+    //Yield();
+    
+    //Join(Exec("../test/sort"));
+    //printf("This is userpro and get Open retvalue is %d\n" , a);
+    //Fork(testfunc);
+    //Exec("../test/sort");
     Halt();
+    //Exit(0);
     /* not reached */
 }

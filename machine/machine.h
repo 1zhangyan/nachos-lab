@@ -26,34 +26,30 @@
 #include "translate.h"
 #include "disk.h"
 
-#ifdef USER_PROGRAM
-#include "bitmap.h"
-
-#endif
 // Definitions related to the size, and format of user memory
 
 #define PageSize 	SectorSize 	// set the page size equal to
 					// the disk sector size, for
 					// simplicity
 
-#define NumPhysPages    32//物理地址页的大小 32个页面封顶
+#define NumPhysPages    32
 #define MemorySize 	(NumPhysPages * PageSize)
 #define TLBSize		4		// if there is a TLB, make it small
 
 enum ExceptionType { NoException,           // Everything ok!
-		     SyscallException,      // A program executed a system call.系统调用
-		     PageFaultException,    // No valid translation found缺页异常
-		     ReadOnlyException,     // Write attempted to page marked 只读异常
+		     SyscallException,      // A program executed a system call.
+		     PageFaultException,    // No valid translation found
+		     ReadOnlyException,     // Write attempted to page marked 
 					    // "read-only"
 		     BusErrorException,     // Translation resulted in an 
-					    // invalid physical address转页机制拿到一个错误的物理地址
+					    // invalid physical address
 		     AddressErrorException, // Unaligned reference or one that
 					    // was beyond the end of the
-					    // address space没有对齐的地址或者地址越界了
-		     OverflowException,     // Integer overflow in add or sub.加减整数时的溢出
-		     IllegalInstrException, // Unimplemented or reserved instr.未使用/保留的异常
+					    // address space
+		     OverflowException,     // Integer overflow in add or sub.
+		     IllegalInstrException, // Unimplemented or reserved instr.
 		     
-		     NumExceptionTypes//异常总数
+		     NumExceptionTypes
 };
 
 // User program CPU state.  The full set of MIPS registers, plus a few
@@ -108,14 +104,6 @@ class Instruction {
 // The procedures in this class are defined in machine.cc, mipssim.cc, and
 // translate.cc.
 
-
-
-//
-/*
-Machine 类是一个仿硬件的平台，用户程序是不知道它是运行在仿真平台上，还是运行在真实的硬件机器上。
-
-*/
-//
 class Machine {
   public:
     Machine(bool debug);	// Initialize the simulation of the hardware
@@ -159,6 +147,9 @@ class Machine {
     void DumpState();		// print the user CPU and memory state 
 
 
+
+	void PCOneTick();
+
 // Data structures -- all of these are accessible to Nachos kernel code.
 // "public" for convenience.
 //
@@ -189,41 +180,10 @@ class Machine {
 // the contents of the TLB are free to be modified by the kernel software.
 
     TranslationEntry *tlb;		// this pointer should be considered 
-					// "read-only" to Nachos kernel code 整个machine只有一份块表，
-					//所以nachos内核代码不应该修改它
+					// "read-only" to Nachos kernel code
 
-    TranslationEntry *pageTable;//每个地址空间一个页表，每个页表中是页表项，
-	//可以根据页表项找到对应的逻辑地址和物理地址直接的对应关系。
+    TranslationEntry *pageTable;
     unsigned int pageTableSize;
-
-#ifdef USER_PROGRAM
-//=================记录tlb相关信息的数据结构============================
-	int queuePointer; // FIFO算法队列指针.
-    int tlbflag[TLBSize];//LRU算法队列指针
-	int findtimes;   //统计信息tlb访问总次数
-	int misstimes;  //统计信息tlb失效次数
-	int Swaptlb();//LRU算法淘汰函数
-	void Hittlb(int hiti);//LRU算法计数函数
-//===================                                    ==============
-
-//=================记录内存空间分配的全局数据结构========================
-    BitMap *MemoryMap;//记录分配信息的比特表
-	int MapPointer;
-	void SetpageTable(int i,int virtualPage , int physicalPage, bool use ,bool readOnly,bool dirty,bool valid ,int thread)
-	{
-        pageTable[i].virtualPage =virtualPage;
-		pageTable[i].physicalPage =physicalPage;
-        pageTable[i].use = use;
-        pageTable[i].readOnly = readOnly;
-        pageTable[i].dirty = dirty;
-        pageTable[i].valid = valid;
-        pageTable[i].thread =thread;
-	}
-//============================                   =====================
-
-#endif
-
-
 
   private:
     bool singleStep;		// drop back into the debugger after each

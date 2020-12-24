@@ -18,6 +18,7 @@
 #include "copyright.h"
 #include "system.h"
 #include "addrspace.h"
+#include "noff.h"
 #ifdef HOST_SPARC
 #include <strings.h>
 #endif
@@ -59,9 +60,8 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(OpenFile *executable )
+AddrSpace::AddrSpace(OpenFile *executable)
 {
-    
     NoffHeader noffH;
     unsigned int i, size;
 
@@ -70,59 +70,26 @@ AddrSpace::AddrSpace(OpenFile *executable )
 		(WordToHost(noffH.noffMagic) == NOFFMAGIC))
     	SwapHeader(&noffH);
     ASSERT(noffH.noffMagic == NOFFMAGIC);
-    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size + UserStackSize;
+
+// how big is address space?
+    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size 
+			+ UserStackSize;	// we need to increase the size
+						// to leave room for the stack
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
-    bool success_create_vm = fileSystem->Create("VirtualMemory", size);
-    OpenFile *vm = fileSystem->Open("VirtualMemory");
-    
-    char *virtualMemory_temp;
-    virtualMemory_temp = new char[size];
-    for (i = 0; i < size; i++)
-        virtualMemory_temp[i] = 0;
-    if (noffH.code.size > 0) {
-        executable->ReadAt(&(virtualMemory_temp[noffH.code.virtualAddr]),
-                           noffH.code.size, noffH.code.inFileAddr);
-        vm->WriteAt(&(virtualMemory_temp[noffH.code.virtualAddr]),
-                    noffH.code.size, noffH.code.virtualAddr*PageSize);
-    }
-    if (noffH.initData.size > 0) {
-        DEBUG('a', "\tCopying data segment, at 0x%x, size %d\n",
-              noffH.initData.virtualAddr, noffH.initData.size);
-        executable->ReadAt(&(virtualMemory_temp[noffH.initData.virtualAddr]),
-                           noffH.initData.size, noffH.initData.inFileAddr);
-        vm->WriteAt(&(virtualMemory_temp[noffH.initData.virtualAddr]),
-                    noffH.initData.size, noffH.initData.virtualAddr*PageSize);
-    }
-   DEBUG('a', "Copy all things to VM vm start at : %d\n",noffH.code.virtualAddr*PageSize);
-/*
-pageTable = new TranslationEntry[numPages];
-for (i = 0; i < numPages; i++) {
-	machine->pageTable[i].virtualPage = i;
-    machine->pageTable[i].physicalPage = i;
-	machine->pageTable[i].valid = TRUE;
-	machine->pageTable[i].use = FALSE;
-	machine->pageTable[i].dirty = FALSE;
-	machine->pageTable[i].readOnly = FALSE;  			
-    }
-/*
 
+    ASSERT(numPages <= NumPhysPages);		// check we're not trying
+						// to run anything too big --
+						// at least until we have
+						// virtual memory
 
-//···············分配页表·································
+    DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
+					numPages, size);
 // first, set up the translation 
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
 	pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-	
-    //==============找到bitmap中的物理页框号来分配==============
-    int NewPhysicPage = machine->MemoryMap->Find();
-    if(NewPhysicPage == -1){
-        printf("NO PhysicPage can be allocatr\n");
-        ASSERT(FALSE);}
-    pageTable[i].physicalPage = NewPhysicPage;
-    //=============              ==============================
-    
-    //pageTable[i].physicalPage = i;
+	pageTable[i].physicalPage = i;
 	pageTable[i].valid = TRUE;
 	pageTable[i].use = FALSE;
 	pageTable[i].dirty = FALSE;
@@ -130,58 +97,24 @@ for (i = 0; i < numPages; i++) {
 					// a separate page, we could set its 
 					// pages to be read-only
     }
-    printf("After Allocating Addr Space:\n");
-    machine->MemoryMap->Print();//分配完毕时候查看系统内存
-//····················分配页表END·························
-
-*/
-
+    
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
-    
-
-/*
-//----------------------------------------------一次性装入所有内容进主存Start-----------------------
+    bzero(machine->mainMemory, size);
 
 // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
-        //printf("noffH.code.size > 0\n");
         DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", 
 			noffH.code.virtualAddr, noffH.code.size);
-
-//====================装填用户程序空间的代码段================
-int code_pos = noffH.code.inFileAddr;
-for(int j = 0 ; j < noffH.code.size ; j++)
-{
-    int tmp_vpn = (noffH.code.virtualAddr + j )/PageSize;
-    int tmp_offset = (noffH.code.virtualAddr + j )%PageSize;
-    int paddr = pageTable[tmp_vpn].physicalPage*PageSize + tmp_offset;
-    executable->ReadAt(&(machine->mainMemory[paddr]),1, code_pos++);
-}
-//==========================================================
-
-        //executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),noffH.code.size, noffH.code.inFileAddr);
+        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
+			noffH.code.size, noffH.code.inFileAddr);
     }
     if (noffH.initData.size > 0) {
-        //printf("noffH.code.size < 0\n");
         DEBUG('a', "Initializing data segment, at 0x%x, size %d\n", 
 			noffH.initData.virtualAddr, noffH.initData.size);
-
-
-//========================装填用户程序空间的初始化数据段=========
-int data_pos = noffH.initData.virtualAddr;
-for(int j = 0 ; j < noffH.code.size ; j++){
-    int tmp_vpn = (noffH.code.virtualAddr + j )/PageSize;
-    int tmp_offset = (noffH.code.virtualAddr + j )%PageSize;
-    int paddr = pageTable[tmp_vpn].physicalPage*PageSize + tmp_offset;
-    executable->ReadAt(&(machine->mainMemory[paddr]),1, data_pos++);
-}
-//============================================================
-        //executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),noffH.initData.size, noffH.initData.inFileAddr);
+        executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
+			noffH.initData.size, noffH.initData.inFileAddr);
     }
-//----------------------一次性装入所有内容进主存END------------------------------------------------------------
-
-*/
 
 }
 
@@ -192,14 +125,7 @@ for(int j = 0 ; j < noffH.code.size ; j++){
 
 AddrSpace::~AddrSpace()
 {
-    //======================bitMap已分配内存回收=======================
-    /*for (int i = 0; i < numPages; i++) {
-    machine->MemoryMap->Clear(pageTable[i].physicalPage);
-    }
-    printf("After Recollect Thread %s the Allocated Addr Space:\n",threadToBeDestroyed->getName());
-    machine->MemoryMap->Print();*/
-    //=========================================================
-   //delete pageTable;
+   delete pageTable;
 }
 
 //----------------------------------------------------------------------
@@ -255,19 +181,6 @@ void AddrSpace::SaveState()
 
 void AddrSpace::RestoreState() 
 {
-    #ifdef USE_TLB
-    //====================TLB失效=====================
-    for (int i = 0; i < TLBSize; i++)
-	machine->tlb[i].valid = FALSE;
-    //===============================================
-    #endif
-   /* for(int i = 0 ; i < NumPhysPages ; i++)
-    {
-        machine->pageTable[i].physicalPage =i;
-        machine->pageTable[i].virtualPage =-1;
-        machine->pageTable[i].use = FALSE;
-        machine->pageTable[i].readOnly = FALSE;
-        machine->pageTable[i].dirty = FALSE;
-        machine->pageTable[i].valid = FALSE;
-    }*/
+    machine->pageTable = pageTable;
+    machine->pageTableSize = numPages;
 }

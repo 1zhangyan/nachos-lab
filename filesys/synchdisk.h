@@ -24,16 +24,6 @@
 // This class provides the abstraction that for any individual thread
 // making a request, it waits around until the operation finishes before
 // returning.
-
-class Cache
-{
-  public:
-     int valid;
-     int sector;
-     char data[SectorSize];
-};
-
-
 class SynchDisk {
   public:
     SynchDisk(char* name);    		// Initialize a synchronous disk,
@@ -51,22 +41,6 @@ class SynchDisk {
     void RequestDone();			// Called by the disk device interrupt
 					// handler, to signal that the
 					// current disk operation is complete.
-  
-  //读写同步相关变量  文件计数变量
-  Semaphore *readerWtiterSemap[NumSectors];
-  int readerNum[NumSectors];
-  Lock *readerLock;
-  int visitorNum[NumSectors];
-
-  
-  //读写同步相关函数
-  void SynchReaderStart(int sector);
-  void SynchReaderExit(int sector);
-  void SynchWriterStart(int sector);
-  void SynchWriterExit(int sector);
-  
-  Cache cache[4] ;
-  int FiFoPointer;
 
   private:
     Disk *disk;		  		// Raw disk device

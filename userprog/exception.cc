@@ -53,6 +53,53 @@
 //	"which" is the kind of exception.  The list of possible exceptions 
 //	are in machine.h.
 //----------------------------------------------------------------------
+void syscallFork(int spacePointer)
+{
+    printf("Come into syscallFork function  current thread: %s\n", currentThread->getName());
+    currentThread->space = (AddrSpace*)spacePointer;
+    machine-> WriteRegister(PCReg,currentThread->space->funcAddr);
+    machine-> WriteRegister(NextPCReg,currentThread->space->funcAddr+sizeof(int));
+    machine->Run();
+}
+
+
+void StartUerPro(int nameAddr)
+{
+    printf("This is func startuserpro\n");
+    char filename[20];
+    int offset = 0;
+    int data;    
+    while(true)
+    {
+        machine->ReadMem(nameAddr + offset , 1 , &data);
+        if (data == 0)
+        {
+            filename[offset] = '\0';
+            break;
+        }
+        filename[offset] = char(data);
+        offset+=1;
+    }
+    printf("Exec filename from the given Addr : ");
+    for(int i = 0 ; i < 20 ; i++)
+        printf("%c",filename[i]);
+    printf("\n");
+
+
+    OpenFile *executable = fileSystem->Open(filename);
+    AddrSpace *space;
+    if (executable == NULL) {
+	printf("Unable to open file %s\n", filename);
+	return;
+    }
+    space = new AddrSpace(executable);    
+    currentThread->space = space;
+    delete executable;			
+    space->InitRegisters();		
+    space->RestoreState();		
+    machine->Run();			
+    ASSERT(FALSE);
+}
 
 void
 ExceptionHandler(ExceptionType which)
@@ -60,68 +107,180 @@ ExceptionHandler(ExceptionType which)
     int type = machine->ReadRegister(2);
 
     if ((which == SyscallException) && (type == SC_Halt)) {
-	DEBUG('a', "Shutdown, initiated by user program.\n");
-   	interrupt->Halt();
+	   
+        printf("this is halt syscall  current thread is : %s \n" , currentThread->getName());
+        DEBUG('a', "Shutdown, initiated by user program.\n");
+   	    interrupt->Halt();
     } 
     else if((which == SyscallException) && (type == SC_Exit))
     {
-        printf("Thread %s EXIT\n",currentThread->getName());
+        printf("this is Exit syscall\n");
+        int status = machine->ReadRegister(4);
+        printf("Thread %s Exit with status : %d \n",currentThread->getName() , status);
+        //machine->clear();
+        machine->PCOneTick();
         currentThread->Finish();
     }
-    else if(which == PageFaultException)
+    else if((which == SyscallException) && (type == SC_Exec))
     {
-        if(machine->tlb!=NULL )
-        {
-            int virtAddr = machine->registers[BadVAddrReg];
-            int vpn = (unsigned) virtAddr / PageSize;
-            int flag = SWAPALG;
-            if (flag ==1)
-            {
-                machine->tlb[machine->queuePointer].virtualPage =  machine->pageTable[vpn].virtualPage;
-                machine->tlb[machine->queuePointer].physicalPage = machine->pageTable[vpn].physicalPage;
-                machine->tlb[machine->queuePointer].valid = TRUE;
-                machine->queuePointer = (machine->queuePointer+1)%TLBSize;
-            }
-            else if (flag ==2)
-            {
-                int tmp = machine->Swaptlb();
-                machine->tlb[tmp].virtualPage =  machine->pageTable[vpn].virtualPage;
-                machine->tlb[tmp].physicalPage = machine->pageTable[vpn].physicalPage;
-                machine->tlb[tmp].valid = TRUE;
-            }
-        }
-        else
-        {//处理缺页异常    
-           
-            int virtAddr = machine->registers[BadVAddrReg] ;
-            int vpn = (unsigned) virtAddr / PageSize;
+        printf("this is Exec syscall \n");
+        int nameAddr = machine->ReadRegister(4);
+        printf("Read filename Addr from Register4 : NameAddr = %d\n",nameAddr);
 
-            int NewPhysicPage = machine->MemoryMap->Find();
-            if(NewPhysicPage == -1)
-            {
-                printf("NO PhysicPage can be allocatr\n");
-                ASSERT(FALSE);
-            }
-
-            machine->pageTable[NewPhysicPage].virtualPage = vpn;
-            machine->pageTable[NewPhysicPage].physicalPage = NewPhysicPage;
-            machine->pageTable[NewPhysicPage].valid = TRUE;
-            machine->pageTable[NewPhysicPage].thread = currentThread->getPid();
-
-            OpenFile *executable = fileSystem->Open("VirtualMemory");
-
-            int code_pos = vpn*PageSize;
-            int paddr = machine->pageTable[NewPhysicPage].physicalPage*PageSize;
-
-            executable->ReadAt(&(machine->mainMemory[paddr]),PageSize, code_pos);
-            delete executable;   
-            DEBUG('a' , "PAGEFAULT Read into memoery %d from file %d size %d\n",paddr ,code_pos , PageSize );
-            printf("PageFault Handler Vpn= %d\tAllocate Ppn= %d\t\n",vpn , NewPhysicPage);
-        }
-            
+        Thread *userThread = new Thread("StartUerPro");
+        userThread->Fork(StartUerPro , nameAddr);
+        printf("StartUserPro Pid %d\n", userThread->getPid());
+        machine->WriteRegister(2 , userThread->getPid());
+        machine->PCOneTick();   
     }
-    else {
-	printf("Unexpected user mode exception %d %d\n", which, type);
-	ASSERT(FALSE);
+    else if((which == SyscallException) && (type == SC_Join))
+    {
+        printf("This is Join syscall\n");
+        int threadid = machine->ReadRegister(4);
+        printf("Get thread %d\n",threadid);
+        while(globalThreadManager->GlobalThreadList[threadid]!=NULL)
+        {
+            currentThread->Yield();
+        }
+        printf("Thread %d has exited\n",threadid);
+        //globalThreadManager->ShowListInfo();
+        machine->PCOneTick();
+    }
+
+
+    else if((which == SyscallException) && (type == SC_Fork))
+    {
+             printf("this is Fork syscall \n");
+            Thread *syscallForkThread = new Thread("syscallForkThread");
+            int funcAddr = machine->ReadRegister(4);
+            currentThread->space->funcAddr = funcAddr;
+            syscallForkThread->Fork(syscallFork , int(currentThread->space));
+            machine->PCOneTick();
+    }
+
+
+
+    else if((which == SyscallException) && (type == SC_Yield))
+    {
+        printf("This is Yield Syscall \n");
+        machine->PCOneTick();
+        currentThread->Yield();
+    }
+
+    else if((which == SyscallException) && (type == SC_Create))
+    {
+        printf("This is Create Syscall \n");
+        int nameAddr = machine->ReadRegister(4);
+        printf("Read filename Addr from Register4 : NameAddr = %d\n",nameAddr);
+        char name[20];
+        int offset = 0;
+        int data;
+        
+        while(true)
+        {
+            machine->ReadMem(nameAddr + offset , 1 , &data);
+            if (data == 0)
+            {
+                name[offset] = '\0';
+                break;
+            }
+            name[offset] = char(data);
+            offset+=1;
+        }
+        printf("Read filename from the given Addr : ");
+        for(int i = 0 ; i < 10 ; i++)
+        printf("%c", name[i]);
+        printf("\nThen Create the file\n");
+        fileSystem->Create(name , 128);
+        machine->PCOneTick();
+    }   
+    else if((which == SyscallException) && (type == SC_Open))
+    {
+            printf("This is Open Syscall \n");
+            int nameAddr = machine->ReadRegister(4);
+            printf("Read filename Addr from Register4 : NameAddr = %d\n",nameAddr);
+            char name[10];
+            int offset = 0;
+            int data;
+            while(true)
+            {
+                machine->ReadMem(nameAddr + offset , 1 , &data);
+                if (data == 0)
+                {
+                    name[offset] = '\0';
+                    break;
+                }
+                name[offset] = char(data);
+                offset+=1;
+            }
+            printf("Read filename from the given Addr : ");
+            for(int i = 0 ; i < 10 ; i++)
+            printf("%c", name[i]);
+            printf("\nThen Open the file\n");
+            OpenFile* openfile = fileSystem->Open(name);
+            printf("Now Get the FileID(Handler) is : %d\n" , int(openfile));
+            printf("Write this value into rg2 as the retrurn value\n" , openfile);
+            machine->WriteRegister(2 , int(openfile));
+            machine->PCOneTick();
+    }
+    else if((which == SyscallException) && (type == SC_Read))
+    {
+        //int Read(char *buffer, int size, OpenFileId id);
+        printf("This is Read Syscall \n");
+        int bufferAddr = machine->ReadRegister(4);
+        int size = machine->ReadRegister(5);
+        int fid = machine->ReadRegister(6);
+        printf("Read filename Addr from Register4 : bufferAddr = %d Read size from Register5 : size = %d Read fileId from Register6 : id = %d  \n",bufferAddr , size , fid);
+        
+        OpenFile *openfile = (OpenFile*) fid;
+        char content[size];
+        int readNum = openfile->Read(content , size);
+        printf("Read content into from file:");
+        for(int i = 0 ; i < size ; i ++)
+        {
+            machine->WriteMem(bufferAddr+i , 1 , int(content[i]));
+            printf("%c",content[i]);
+        }
+        printf("\nNow write the retNum = %d into Rg2\n" , readNum);
+        machine->WriteRegister(2,readNum);
+        machine->PCOneTick();
+    }
+    else if((which == SyscallException) && (type == SC_Write))
+    {
+        printf("This is Write Syscall \n");
+        int bufferAddr = machine->ReadRegister(4);
+        int size = machine->ReadRegister(5);
+        int fid = machine->ReadRegister(6);
+        printf("Read filename Addr from Register4 : bufferAddr = %d Read size from Register5 : size = %d Read fileId from Register6 : id = %d  \n",bufferAddr , size , fid);
+        char content[size];
+        int data;
+        for(int i = 0 ; i < size; i++)
+        {
+
+            machine->ReadMem(bufferAddr + i , 1 , &data);
+            content[i] = char(data);
+            printf("data = %c\n", data);
+        }
+        printf("Now write the content into the file\n");
+        OpenFile *openfile = (OpenFile*) fid;
+        openfile->Write(content , size);
+        machine->PCOneTick();
+    }
+    else if((which == SyscallException) && (type == SC_Close))
+    {
+        printf("This is Close Syscall \n");
+        int fid = machine->ReadRegister(4);
+        printf("Read fid from Register4 fid = %d\n",fid);
+        OpenFile *openfile = (OpenFile*)fid;
+        printf("Now Delete the openfile obj to close the file\n");
+        delete openfile;
+        machine->PCOneTick();
+    }
+    
+    else 
+    {
+       // printf("Unexpected user mode exception %d %d\n", which, type);
+       // ASSERT(FALSE);
+       interrupt->Halt();
     }
 }

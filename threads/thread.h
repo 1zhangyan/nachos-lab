@@ -91,6 +91,8 @@ class Thread {
     int fileHandler;
     int filePointer;
 
+    //char filename[20];
+
 
 
     Thread(char* debugName);		// initialize a Thread 
@@ -113,6 +115,9 @@ class Thread {
     
     char* getName() { return (name); };
 
+
+
+    void SetFileName(char *name);
     //
     int getPid(){return (new_add_pid) ;}
     int getUid(){return (new_add_uid) ;}
@@ -172,7 +177,7 @@ class Thread {
   public:
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
-    char* filename;
+    char filename[20];
     AddrSpace *space;			// User code this thread is running.
 #endif
 };

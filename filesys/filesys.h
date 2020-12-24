@@ -38,7 +38,6 @@
 #include "copyright.h"
 #include "openfile.h"
 
-#define MAXTHREADNUM 128
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
 				// calls to UNIX, until the real file system
 				// implementation is available
@@ -68,19 +67,16 @@ class FileSystem {
 #else // FILESYS
 class FileSystem {
   public:
-    int OpenFileTable[MAXTHREADNUM];
-  //打开文件表
     FileSystem(bool format);		// Initialize the file system.
-					// Must be called *afgter* "synchDisk" 
+					// Must be called *after* "synchDisk" 
 					// has been initialized.
     					// If "format", there is nothing on
 					// the disk, so initialize the directory
     					// and the bitmap of free blocks.
 
-    bool Create(char *name, int initialSize );  	
+    bool Create(char *name, int initialSize);  	
 					// Create a file (UNIX creat)
 
-	bool Create(char *name, int initialSize , bool type);
     OpenFile* Open(char *name); 	// Open a file (UNIX open)
 
     bool Remove(char *name);  		// Delete a file (UNIX unlink)

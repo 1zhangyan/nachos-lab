@@ -77,7 +77,7 @@ class OpenFile {
     int Write(char *from, int numBytes);
 
     int ReadAt(char *into, int numBytes, int position);
-    			    // Read/write bytes from the file,
+    					// Read/write bytes from the file,
 					// bypassing the implicit position.
     int WriteAt(char *from, int numBytes, int position);
 
@@ -87,7 +87,6 @@ class OpenFile {
 					// end of file, tell, lseek back 
     
   private:
-	int fileSector;
     FileHeader *hdr;			// Header for this file 
     int seekPosition;			// Current position within the file
 };

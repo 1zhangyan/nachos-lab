@@ -17,25 +17,11 @@
 #include "console.h"
 #include "system.h"
 
-
 // Dummy functions because C++ is weird about pointers to member functions
 static void ConsoleReadPoll(int c) 
 { Console *console = (Console *)c; console->CheckCharAvail(); }
 static void ConsoleWriteDone(int c)
 { Console *console = (Console *)c; console->WriteDone(); }
-
-
-static Semaphore *readAvail = new Semaphore("read avail" , 0);
-static Semaphore *writeDone = new Semaphore("write done", 0);
-static void ReadAvail(int arg)
-{
-    readAvail->V();
-}
-static void WriteDone(int arg)
-{
-    writeDone->V();
-}
-
 
 //----------------------------------------------------------------------
 // Console::Console
@@ -161,37 +147,4 @@ Console::PutChar(char ch)
     putBusy = TRUE;
     interrupt->Schedule(ConsoleWriteDone, (int)this, ConsoleTime,
 					ConsoleWriteInt);
-}
-
-
-
-
-
-// synchconsole
-//--------------------
-//--------------------
-//----------------
-SynchConsole::SynchConsole(char *readFile, char *writeFile)
-{
-    lock = new Lock("synchConsole");
-    console = new Console(readFile,writeFile,ReadAvail,WriteDone,0);
-}
-
-void 
-SynchConsole::PutChar(char ch)
-{
-    lock->Acquire();
-    console->PutChar(ch);
-    writeDone->P();
-    lock->Release();
-}
-
-char 
-SynchConsole::GetChar()
-{
-    lock->Acquire();
-    readAvail->P(); 
-    char ch = console->GetChar();
-    lock->Release();
-    return ch;
 }

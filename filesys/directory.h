@@ -21,7 +21,7 @@
 
 #define FileNameMaxLen 		9	// for simplicity, we assume 
 					// file names are <= 9 characters long
-#define FilePathMaxLen   20
+
 // The following class defines a "directory entry", representing a file
 // in the directory.  Each entry gives the name of the file, and where
 // the file's header is to be found on disk.
@@ -36,10 +36,6 @@ class DirectoryEntry {
 					//   FileHeader for this file 
     char name[FileNameMaxLen + 1];	// Text name for file, with +1 for 
 					// the trailing '\0'
-    //char path[FilePathMaxLen + 1];
-    bool type;//file type that descript the type of the file. 0 for dierectory file and 1 for normal file 
-
-  
 };
 
 // The following class defines a UNIX-like "directory".  Each entry in

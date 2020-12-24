@@ -23,7 +23,6 @@
 #include "copyright.h"
 #include "interrupt.h"
 #include "system.h"
-#include "machine.h"
 
 // String definitions for debugging messages
 
@@ -115,7 +114,6 @@ Interrupt::ChangeLevel(IntStatus old, IntStatus now)
 IntStatus
 Interrupt::SetLevel(IntStatus now)
 {
-    //printf("SETLEVEL\n");
     IntStatus old = level;
     
     ASSERT((now == IntOff) || (inHandler == FALSE));// interrupt handlers are 
@@ -124,7 +122,7 @@ Interrupt::SetLevel(IntStatus now)
 
     ChangeLevel(old, now);			// change to new state
     if ((now == IntOn) && (old == IntOff))
-	{currentThread->used_time_slice +=10;OneTick();}// advance simulated time
+	OneTick();				// advance simulated time
     return old;
 }
 
@@ -153,10 +151,8 @@ void
 Interrupt::OneTick()
 {
     MachineStatus old = status;
-    
 
-    //printf("One TICK\n");
-    // advance simulated time
+// advance simulated time
     if (status == SystemMode) {
         stats->totalTicks += SystemTick;
 	stats->systemTicks += SystemTick;
@@ -177,8 +173,7 @@ Interrupt::OneTick()
 					// for a context switch, ok to do it now
 	yieldOnReturn = FALSE;
  	status = SystemMode;		// yield is a kernel routine
-	
-    currentThread->Yield();
+	currentThread->Yield();
 	status = old;
     }
 }
@@ -245,14 +240,6 @@ Interrupt::Idle()
 void
 Interrupt::Halt()
 {
-   // globalThreadManager->ShowListInfo();
-
-    //printf("Assuming the program memory has been recllected.\n");
-    #ifdef USE_TLB
-    double missrate = (machine->misstimes)*100.00/(machine->findtimes - machine->misstimes);
-    printf("ALL:%d   Miss:%d   MissRate:%.2lf% \n",machine->findtimes,machine->misstimes,missrate);
-    #endif  
-
     printf("Machine halting!\n\n");
     stats->Print();
     Cleanup();     // Never returns.
@@ -310,20 +297,16 @@ Interrupt::CheckIfDue(bool advanceClock)
 					// to invoke an interrupt handler
     if (DebugIsEnabled('i'))
 	DumpState();
-    PendingInterrupt *toOccur = (PendingInterrupt *)pending->SortedRemove(&when);
+    PendingInterrupt *toOccur = 
+		(PendingInterrupt *)pending->SortedRemove(&when);
 
     if (toOccur == NULL)		// no pending interrupts
 	return FALSE;			
 
-    if (advanceClock && when > stats->totalTicks) 
-    {	
-    // advance the clock
+    if (advanceClock && when > stats->totalTicks) {	// advance the clock
 	stats->idleTicks += (when - stats->totalTicks);
-	stats->totalTicks = when;   
-    } 
-    else if (when > stats->totalTicks) 
-    {	
-    // not time yet, put it back
+	stats->totalTicks = when;
+    } else if (when > stats->totalTicks) {	// not time yet, put it back
 	pending->SortedInsert(toOccur, when);
 	return FALSE;
     }
@@ -384,5 +367,3 @@ Interrupt::DumpState()
     printf("End of pending interrupts\n");
     fflush(stdout);
 }
-
-

@@ -19,7 +19,6 @@
 #include "utility.h"
 #include "openfile.h"
 
-
 // Definitions helpful for representing a bitmap as an array of integers
 #define BitsInByte 	8
 #define BitsInWord 	32
@@ -52,7 +51,6 @@ class BitMap {
     // write the bitmap to a file
     void FetchFrom(OpenFile *file); 	// fetch contents from disk 
     void WriteBack(OpenFile *file); 	// write contents to disk
-    int FirstFind( int size);
 
   private:
     int numBits;			// number of bits in the bitmap

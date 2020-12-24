@@ -45,14 +45,6 @@ SynchDisk::SynchDisk(char* name)
     semaphore = new Semaphore("synch disk", 0);
     lock = new Lock("synch disk lock");
     disk = new Disk(name, DiskRequestDone, (int) this);
-    for (int i = 0 ; i < NumSectors ; i ++)
-    {
-        readerWtiterSemap[i] = new  Semaphore("readerWriterSemap" , 1);
-        readerNum[i] = 0;
-        visitorNum[i] = 0;
-    }
-    readerLock = new Lock("readerLock");
-    FiFoPointer = 0;
 }
 
 //----------------------------------------------------------------------
@@ -80,33 +72,8 @@ SynchDisk::~SynchDisk()
 void
 SynchDisk::ReadSector(int sectorNumber, char* data)
 {
-
     lock->Acquire();			// only one disk I/O at a time
-    
-    int find = -1;
-    for(int i = 0 ; i < 4 ; i ++)
-    {
-        if(cache[i].valid==1&&cache[i].sector==sectorNumber)
-        {
-            find = i;
-            break;
-        }
-    }
-    if (find == -1)
-    {
-        disk->ReadRequest(sectorNumber, data);
-        cache[FiFoPointer].valid = 1;
-        cache[FiFoPointer].sector = sectorNumber;
-        bcopy(data , cache[FiFoPointer].data , SectorSize);
-        FiFoPointer = (FiFoPointer+1)%4;
-    }
-    else
-    {
-        bcopy(cache[find].data,data,SectorSize);
-        disk->HandleInterrupt();
-    }
-
-    //disk->ReadRequest(sectorNumber, data);
+    disk->ReadRequest(sectorNumber, data);
     semaphore->P();			// wait for interrupt
     lock->Release();
 }
@@ -139,49 +106,4 @@ void
 SynchDisk::RequestDone()
 { 
     semaphore->V();
-}
-
-
-//读写同步相关函数
-
-void 
-SynchDisk::SynchReaderStart(int sector)
-{
-    readerLock->Acquire();
-    readerNum[sector]++;
-    if (readerNum[sector] == 1)
-        readerWtiterSemap[sector]->P();
-    printf("SynchReaderStart The reader num : %d read sector : %d\n" , readerNum[sector] , sector);
-    readerLock->Release();
-}
-
-
-
-void
-SynchDisk::SynchReaderExit(int sector)
-{
-    readerLock->Acquire();
-    readerNum[sector]--;
-    if(readerNum[sector] == 0)
-        readerWtiterSemap[sector]->V();
-    printf("SynchReaderExit The reader num : %d read sector : %d\n" , readerNum[sector] , sector);
-    readerLock->Release();
-}
-
-
-void 
-SynchDisk::SynchWriterStart(int sector)
-{
-    readerWtiterSemap[sector]->P();
-    //printf("Writer is writing\n");
-}
-
-
-
-void 
-SynchDisk::SynchWriterExit(int sector)
-{
-    //printf("Writer is Exiting\n");
-    readerWtiterSemap[sector]->V();
-    
 }
